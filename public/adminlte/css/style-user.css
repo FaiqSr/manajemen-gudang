@@ -1,0 +1,686 @@
+html{
+    scroll-behavior: smooth;
+}
+
+::selection{
+    background-color: #EE5A24;
+}
+
+::-webkit-scrollbar{
+    width: 10px;
+    background-color: #f1f1f1;
+}
+
+::-webkit-srollbar-thumb{
+    background-color: #353b48;
+}
+.navbar{
+    padding-left: 72px;   
+    padding-right: 72px;
+    height: 80px;
+    width: 100%;
+    
+}
+
+.fixed{
+    position: fixed;
+}
+
+.carousel-indicators li{
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+}
+
+.text-coklat{
+    color:#AC6730;
+}
+
+.text-kuning{
+    color: #EE5A24;
+}
+.overflow-x-hidden{
+    overflow-x: hidden;
+}
+.bg-oren{
+    background-color: #FFC312;
+}
+.bg-abu-abu{
+    background-color: #1e272e;
+}
+.testimoni-sub{
+    color: #57606f;
+}
+.card-testimoni{
+    border-radius: 38px 0;
+}
+.card-testimoni::before{
+    content: url('../pict/home/quotes.png');
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    bottom: 0;
+    right: 28px;
+    top: 12px;
+}
+.card-testimoni img{
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: inline-block;
+}
+.card-testimoni h5{
+    display: inline-block;
+}
+.bar{
+    display: none;
+}
+
+.footer-atas{
+    background-color: #964b00;
+    color: #FFF;
+    transition: 2s linear;
+}
+
+#sidebar{
+    display: none;
+    position: fixed;
+    background-color: #7f8c8d;
+}
+.carousel-item img{
+    height: 650px;
+    transition: 0.5s;
+}
+.goTop{
+    position: fixed;
+    z-index: 999;
+    bottom: 40px;
+    right: 40px;
+    width: 50px;
+    height: 50px;
+    background-color: #e74c3c;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    color: #fff;
+    outline: none;
+    display: none;
+    transition: 0.5s;
+  }
+
+.card-img-overlay p{
+    font-size: 42px;
+    width: 40%;
+    font-weight: bold;
+    padding:12px;
+    margin-top: 23%;
+    margin-left: 30%;
+    margin-right: 30%;
+    background-image: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,1), rgba(255,255,255,0.1));
+    text-align: center;
+}
+
+.contact-shape-left{
+    width: 70%;
+    background-color: #FFC312;
+    height: 350px;
+    margin-top: 50px;
+    margin-bottom: 10px;
+}
+.contact-shape-left::before{
+    content: "";
+    position: absolute;
+    left: 70%;
+    width: 0;
+    height: 0;
+    border-top: 175px solid transparent;
+    border-bottom: 175px solid transparent;
+    border-left: 200px solid #FFC312;
+}
+.contact-img{
+    width: 30%;
+}
+.contact-img img{
+    width: 200px;
+    margin-top: 24px;
+}
+.contact-text{
+    width: 70%;
+    color: #fff;
+}
+.contact-text .title-contact-shape{
+    width: 100%;
+    font-size: 48px;
+    font-weight: bold;
+    text-align: left;
+    display: block;
+}
+
+.contact-text .subtitle-contact-shape{
+    width: 100%;
+    padding-top: 36px;
+    font-size: 24px;
+    font-weight: normal;
+    text-align: left;
+    display: block;
+}
+
+.btn-contact-tanya{
+    right: 0;
+    font-size: 24px;
+    padding-left: 42px;
+    padding-right: 42px;
+    padding-top: 8px;
+    padding-bottom: 12px;
+    margin-left: 65%;
+}
+.contact-shape-right{
+    width: 70%;
+    background-color: #2d98da;
+    height: 350px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    margin-left: 30%;
+}
+.contact-shape-right::before{
+    content: "";
+    position: absolute;
+    right: 70%;
+    width: 0;
+    height: 0;
+    border-top: 175px solid transparent;
+    border-bottom: 175px solid transparent;
+    border-right: 200px solid #2d98da;
+}
+.h-kritik-saran{
+    margin-bottom: -24px;
+    padding: 8px;
+    background-color: #1e272e;
+    z-index: 999;
+    position: relative;
+    width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 8px;
+}
+.form-email-kontak{
+    border: 2px solid #1e272e;
+    border-radius: 8px;
+}
+.form-email-kontak input{
+    width: 100%;
+    padding: 12px 20px;
+    margin-top: 18px;
+    border-radius: 12px;
+    border: 2px solid #1e272e;
+    background-color: #fff;
+    font-size: 18px;
+}
+
+.form-email-kontak input:focus{
+    width: 100%;
+    padding: 12px 20px;
+    margin-top: 18px;
+    outline: none;
+}
+
+.form-email-kontak input:focus::placeholder, .form-email-kontak textarea:focus::placeholder {
+    color: transparent;
+}
+
+.form-email-kontak textarea{
+    width: 100%;
+    height: 150px;
+    margin-top: 18px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background-color: #fff;
+    box-sizing: border-box;
+    font-size: 18px;
+    border: 2px solid #1e272e;
+    outline: 0;
+}
+
+.form-email-kontak button{
+    margin-top: 18px;
+    padding: 8px 36px;
+    border-radius: 12px;
+}
+.bagan-sejarah{
+    margin-top: 24px;
+    margin-bottom: 24px;
+}
+.sejarah-kiri{
+    padding-top: 52px;
+    padding-right: 32px;
+    padding-left: 32px;
+    padding-bottom: 32px;
+}
+.tentang-header-sejarah{
+    padding: 10px;
+    width: 100%;
+    font-size: 32px;
+}
+.tentang-header-sejarah::before{
+    content: "";
+    position: absolute;
+    top: 52px;
+    left: 0;
+    width: 100px;
+    height: 5px;
+    background-color: #FFC312;
+}
+.text-sejarah{
+    width: 100%;
+    margin-top: 12px;
+    font-size: 16px;
+    color: #1e272e;
+}
+.title-card-vm{
+    text-align: center;
+}
+.title-card-vm::before{
+    content: "";
+    position: absolute;
+    top: 52px;
+    right: 40%;
+    width: 100px;
+    height: 5px;
+    background-color: #FFC312;
+}
+.text-card-vm{
+    margin-top: 12px;
+    text-align: justify;
+}
+@media only screen and (min-width: 300px) {
+    ::-webkit-scrollbar{
+        width: 0px;
+    }
+    .navbar{
+        padding-left: 12px;   
+        padding-right: 12px;
+    }
+    #sidebar{
+        display: inline-block;
+    }
+    .bar{
+        display: inline-block;
+    }
+    .carousel-item img{
+        height: 250px;
+    }
+    .btn-dash{
+        width: calc(100%/3);
+    }
+    .card-img-top {
+        width: 100%;
+        height: 20vw;
+        object-fit: cover;
+    }
+    .footer-atas{
+        text-align: center;
+    }
+    .goTop{
+        bottom: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+    }
+    .card-img-overlay p{
+        font-size: 24px;
+        padding:4px;
+    }
+    .contact-shape-left{
+        width: 80%;
+        height: 150px;
+        margin-top: 10px;
+    }
+    .contact-shape-left::before{
+        left: 79.86%;
+        border-top: 75px solid transparent;
+        border-bottom: 75px solid transparent;
+        border-left: 60px solid #FFC312;
+    }
+    .contact-img{
+        padding:8px;
+    }
+    .contact-img img{
+        width: 75px;
+        margin-top: 28px;
+    }
+    .contact-text{
+        padding: 12px;
+    }
+    .contact-text .title-contact-shape{
+        font-size: 20px;
+    }
+    
+    .contact-text .subtitle-contact-shape{
+        width: 100%;
+        padding-top: 10px;
+        font-size: 14px;
+    }
+    
+    .btn-contact-tanya{
+        font-size: 12px;
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        margin-left: 60%;
+        margin-top: -12px;
+    }
+    .contact-shape-right{
+        width: 80%;
+        height: 150px;
+        margin-top: 15px;
+        margin-left: 20%;
+        margin-bottom: 12px;
+    }
+    .contact-shape-right::before{
+        right: 79.86%;
+        border-top: 75px solid transparent;
+        border-bottom: 75px solid transparent;
+        border-right: 60px solid #2d98da;
+    }
+    .h-kritik-saran{
+        margin-bottom: -20px;
+        font-size: 24px;
+        padding: 4px;
+        width: 200px;
+        border-radius: 8px;
+    }
+    .form-email-kontak{
+        border: 2px solid #1e272e;
+        border-radius: 8px;
+        width: 90%;
+        margin: auto;
+        padding: 24px;
+    }
+    .form-email-kontak input{
+        width: 100%;
+        padding: 8px 14px;
+        margin-top: 12px;
+        border-radius: 12px;
+        border: 1px solid #1e272e;
+        background-color: #fff;
+        font-size: 14px;
+    }
+    
+    .form-email-kontak input:focus{
+        width: 100%;
+        padding: 8px 14px;
+        margin-top: 12px;
+        outline: none;
+    }
+    .form-email-kontak textarea{
+        width: 100%;
+        height: 100px;
+        margin-top: 12px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background-color: #fff;
+        box-sizing: border-box;
+        font-size: 14px;
+        border: 1px solid #1e272e;
+        outline: 0;
+    }
+    .form-email-kontak button{
+        margin-top: 12px;
+        padding: 6px 36px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+    .tentang-header-sejarah{
+        font-size: 22px;
+    }
+    .tentang-header-sejarah::before{
+        top: 42px;
+        width: 100px;
+        height: 5px;
+    }
+    .title-card-vm::before{
+        right: 35%;
+    }
+    .title-vm{
+        font-size: 24px;
+    }
+}
+
+@media only screen and (min-width: 765px) {
+    ::-webkit-scrollbar{
+        width: 0px;
+    }
+    .navbar{
+        padding-left: 48px;   
+        padding-right: 48px;
+    }
+    .bar{
+        display: none;
+    }
+    #sidebar{
+        display: none;
+    }
+    .carousel-item img{
+        height: 650px;
+    }
+    .card-img-top {
+        width: 100%;
+        height: 10vw;
+        object-fit: cover;
+    }
+    .footer-atas{
+        text-align: left;
+    }
+    .goTop{
+        bottom: 40px;
+        right: 40px;
+        width: 50px;
+        height: 50px;
+    }
+    .card-img-overlay p{
+        font-size: 28px;
+        padding:6px;
+    }
+    .contact-shape-left{
+        width: 70%;
+        height: 250px;
+        margin-top: 10px;
+    }
+    .contact-shape-left::before{
+        left: 69.86%;
+        border-top: 125px solid transparent;
+        border-bottom: 125px solid transparent;
+        border-left: 100px solid #FFC312;
+    }
+    .contact-img{
+        padding:12px;
+    }
+    .contact-img img{
+        width: 150px;
+        margin-top: 32px;
+    }
+    .contact-text{
+        padding:12px;
+    }
+    .contact-text .title-contact-shape{
+        font-size: 32px;
+    }
+    
+    .contact-text .subtitle-contact-shape{
+        padding-top: 24px;
+        font-size: 20px;
+    }
+    
+    .btn-contact-tanya{
+        right: 0;
+        font-size: 20px;
+        padding-left: 18px;
+        padding-right: 18px;
+        padding-top: 8px;
+        padding-bottom: 12px;
+        margin-left: 65%;
+        margin-top: 0px;
+    }
+
+    .contact-shape-right{
+        margin-left: 30%;
+        width: 70%;
+        height: 250px;
+        margin-top: 10px;
+        margin-bottom: 12px;
+    }
+    .contact-shape-right::before{
+        right: 69.86%;
+        border-top: 125px solid transparent;
+        border-bottom: 125px solid transparent;
+        border-right: 100px solid #2d98da;
+    }
+    .title-card-vm::before{
+        right: 32%;
+    }
+}
+
+@media only screen and (min-width: 1020px) {
+    ::-webkit-scrollbar{
+        width: 10px;
+    }
+    .navbar{
+        padding-left: 72px;   
+        padding-right: 72px;
+    }
+    #sidebar{
+        display: none;
+    }
+    .carousel-item img{
+        height: 650px;
+    }
+    .bar{
+        display: none;
+    }
+    .footer-atas{
+        text-align: left;
+    }
+    .goTop{
+        bottom: 40px;
+        right: 40px;
+        width: 50px;
+        height: 50px;
+    }
+    .card-img-overlay p{
+        font-size: 42px;
+        padding:8px;
+    }
+    .contact-shape-left{
+        width: 70%;
+        height: 350px;
+        margin-top: 50px;
+    }
+    .contact-shape-left::before{
+        left: 70%;
+        border-top: 175px solid transparent;
+        border-bottom: 175px solid transparent;
+        border-left: 200px solid #FFC312;
+    }
+    .contact-img{
+        padding:32px;
+    }
+    .contact-img img{
+        width: 200px;
+        margin-top: 24px;
+    }
+    .contact-text{
+        padding:32px;
+    }
+    .contact-text .title-contact-shape{
+        font-size: 48px;
+    }
+    
+    .contact-text .subtitle-contact-shape{
+        padding-top: 36px;
+        font-size: 24px;
+    }
+    
+    .btn-contact-tanya{
+        right: 0;
+        font-size: 24px;
+        padding-left: 42px;
+        padding-right: 42px;
+        padding-top: 8px;
+        padding-bottom: 12px;
+        margin-left: 65%;
+        margin-top: 12px;
+    }
+
+    .contact-shape-right{
+        width: 70%;
+        height: 350px;
+        margin-top: 30px;
+        margin-left: 30%;
+        margin-bottom: 52px;
+    }
+    .contact-shape-right::before{
+        right: 70%;
+        width: 0;
+        height: 0;
+        border-top: 175px solid transparent;
+        border-bottom: 175px solid transparent;
+        border-right: 200px solid #2d98da;
+    }
+    .h-kritik-saran{
+        margin-bottom: -24px;
+        padding: 8px;
+        width: 300px;
+        font-size: 36px;
+    }
+    .form-email-kontak{
+        border: 2px solid #1e272e;
+        border-radius: 8px;
+        width: 100%;
+        padding: 42px;
+    }
+    .form-email-kontak input{
+        padding: 12px 20px;
+        margin-top: 18px;
+        border-radius: 12px;
+        border: 2px solid #1e272e;
+        font-size: 18px;
+    }
+    
+    .form-email-kontak input:focus{
+        padding: 12px 20px;
+        margin-top: 18px;
+    }
+
+    .form-email-kontak textarea{
+        width: 100%;
+        height: 150px;
+        margin-top: 18px;
+        padding: 12px 20px;
+        font-size: 18px;
+        border: 2px solid #1e272e;
+    }
+    
+    .form-email-kontak button{
+        margin-top: 18px;
+        padding: 8px 36px;
+        border-radius: 12px;
+        font-size: 18px;
+    }
+    .tentang-header-sejarah{
+        font-size: 32px;
+    }
+    .tentang-header-sejarah::before{
+        top: 52px;
+        width: 100px;
+        height: 5px;
+    }
+    .title-card-vm::before{
+        right: 40%;
+    }
+    .title-vm{
+        font-size: 32px;
+    }
+}
+

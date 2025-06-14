@@ -1,0 +1,20 @@
+.text-coklat{
+    color:#AC6730;
+}
+
+.blok-coklat{
+    background-color:#AC6730;
+}
+
+.btn-coklat{
+    background-color:#AC6730;
+    color: #fff;
+    border: 0;
+}
+.btn-coklat:hover{
+    background-color:#6A4E42;
+}
+
+.link-coklat:hover{
+    color:#6A4E42;
+}

@@ -1,0 +1,114 @@
+.bg-hutan{
+    background-image: url('../pict/bg/bg-1.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    height: 1080px;
+    width: 1980px;
+}
+
+.bg-ban-tanam{
+    background-image: url('../pict/bg/banner_tanam.jpg');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+}
+
+.btn-siram{
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+}
+
+.btn-rounded{
+    border-radius: 30px !important;
+}
+
+.img-tanaman{
+    position: fixed;
+    right: 40%;
+    bottom: 30%;
+    width: 500px;
+}
+
+.img-egg{
+    position: fixed;
+    right: 40%;
+    bottom: 30%;
+    width: 300px;
+    z-index: 1;
+}
+
+.img-egg-open{
+    position: fixed;
+    right: 40%;
+    bottom: 30%;
+    width: 470px;
+    z-index: 1;
+}
+
+.img-sarang{
+    position: fixed;
+    right: 38%;
+    bottom: 19%;
+    width: 400px;
+}
+
+.kotak-koin{
+    position: fixed;
+    right: 36%;
+    bottom: 57%;
+    width: 400px;
+    display: flex;
+    z-index: 2;
+    /* border:1px solid #e67e22;
+    align-items: center;
+    background-color: #fff; */
+}
+
+.kotak-koin p{
+    font-size: 90px;
+    color: #e67e22;
+}
+
+.text-angka{
+    position: fixed;
+    margin-top: -50px;
+    padding-left: 70px;
+    font-size: 24px;
+    color: #74B9FF;
+}
+
+.box-air{
+    position: fixed;
+    border: 4px solid #74B9FF;
+    background-color: #fff;
+    width: 300px;
+    height: 50px;
+    right: 45%;
+    bottom: 25%;
+}
+
+.box-air-terisi{
+    position: fixed;
+    border: 4px solid #74B9FF;
+    background-color: #74B9FF;
+    width: 250px;
+    height: 50px;
+    right: 45%;
+    bottom: 25%;
+    transition: width 1s;
+}
+
+.text-air-terisi{
+    position: fixed;
+    color: #fff;
+    width: 250px;
+    height: 50px;
+    right: 42%;
+    bottom: 18%;
+    font-size: 32px;
+}
+
+
+
