@@ -5,7 +5,7 @@
 @section('breadcrums')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1>supplier</h1>
+            <h1>Supplier - Bahan Baku</h1>
         </div>
         <div class="col-sm-6">
         </div>

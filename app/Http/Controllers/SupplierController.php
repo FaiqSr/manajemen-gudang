@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PembelianExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SupplierController extends Controller
 {
@@ -61,7 +64,54 @@ class SupplierController extends Controller
         return redirect()->back()->with('delete_sukses', 1);
     }
 
-    public function pembelian()
+    public function pembelian(Request $request)
+    {
+        $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
+        $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
+        $supplier_id_terpilih = $request->input('id_supplier');
+
+        $subQuery = DB::table('pembelian_detail')
+            ->select('id_pembelian', DB::raw('SUM(jumlah) as total_qty'), DB::raw('COUNT(id) as jumlah_item'))
+            ->groupBy('id_pembelian');
+
+        $pembelians = DB::table('pembelian as p')
+            ->join('suppliers as s', 'p.id_supplier', '=', 's.id')
+            ->leftJoinSub($subQuery, 'pd', function ($join) {
+                $join->on('p.id', '=', 'pd.id_pembelian');
+            })
+            ->select('p.id', 'p.tanggal_pembelian', 'p.nomor_invoice', 's.nama_supplier', 'p.total_biaya', 'pd.jumlah_item')
+            ->whereBetween('p.tanggal_pembelian', [$tanggal_mulai, $tanggal_selesai])
+            ->when($supplier_id_terpilih, function ($query, $supplierId) {
+                return $query->where('p.id_supplier', $supplierId);
+            })
+            ->orderBy('p.tanggal_pembelian', 'desc')
+            ->orderBy('p.id', 'desc')
+            ->get();
+
+        $pembelianIds = $pembelians->pluck('id')->toArray();
+
+        $groupedDetails = DB::table('pembelian_detail as pd')
+            ->join('bahan_baku as bb', 'pd.id_bahan_baku', '=', 'bb.id')
+            ->select('pd.id_pembelian', 'bb.nama_bahan', 'bb.satuan', 'pd.jumlah', 'pd.subtotal')
+            ->whereIn('pd.id_pembelian', $pembelianIds)
+            ->get()
+            ->groupBy('id_pembelian');
+
+        $suppliers = DB::table('suppliers')->orderBy('nama_supplier')->get();
+        $bahanBaku = DB::table('bahan_baku')->orderBy('nama_bahan')->get();
+
+        return view('supplier.pembelian', [
+            'pembelians' => $pembelians,
+            'groupedDetails' => $groupedDetails,
+            'suppliers' => $suppliers,
+            'bahanBaku' => $bahanBaku,
+            'tanggal_mulai' => $tanggal_mulai,
+            'tanggal_selesai' => $tanggal_selesai,
+            'supplier_id_terpilih' => $supplier_id_terpilih,
+        ]);
+    }
+
+    public function create_pembelian()
     {
         $suppliers = DB::table('suppliers')->orderBy('nama_supplier')->get();
         $bahanBaku = DB::table('bahan_baku')->orderBy('nama_bahan')->get();
@@ -76,6 +126,7 @@ class SupplierController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'id_supplier' => 'required|integer|exists:suppliers,id',
+            'nomor_invoice' => 'nullable|string|max:50',
             'tanggal_pembelian' => 'required|date',
             'bahan' => 'required|array|min:1',
             'bahan.*.id' => 'required|integer|exists:bahan_baku,id',
@@ -84,7 +135,7 @@ class SupplierController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return redirect()->back()->withErrors($validator)->withInput()->with('show_form', true);
         }
 
         try {
@@ -96,12 +147,16 @@ class SupplierController extends Controller
 
                 $pembelianId = DB::table('pembelian')->insertGetId([
                     'id_supplier' => $request->id_supplier,
+                    'nomor_invoice' => $request->nomor_invoice,
                     'tanggal_pembelian' => $request->tanggal_pembelian,
                     'total_biaya' => $total_biaya,
                     'created_at' => now(),
                 ]);
 
                 $keteranganJurnal = 'Pembelian Bahan Baku dari ' . DB::table('suppliers')->where('id', $request->id_supplier)->value('nama_supplier');
+                if ($request->nomor_invoice) {
+                    $keteranganJurnal .= ' Inv: ' . $request->nomor_invoice;
+                }
 
                 $jurnalId = DB::table('jurnal')->insertGetId([
                     'tanggal_transaksi' => $request->tanggal_pembelian,
@@ -128,22 +183,13 @@ class SupplierController extends Controller
                         ['id_bahan_baku' => $item['id']],
                         ['jumlah_stok' => ($stokGudang->jumlah_stok ?? 0) + $item['jumlah'], 'last_updated' => now()]
                     );
-
-                    $stokGudangId = DB::table('stok_gudang')->where('id_bahan_baku', $item['id'])->value('id');
-
-                    DB::table('stok_gudang_detail')->insert([
-                        'id_stok_gudang' => $stokGudangId,
-                        'status' => 'IN',
-                        'jumlah' => $item['jumlah'],
-                        'tanggal' => $request->tanggal_pembelian
-                    ]);
                 }
             });
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan transaksi pembelian: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage());
         }
 
-        return redirect()->route('pembelian.create')->with('add_sukses', 'Pembelian bahan baku berhasil dicatat!');
+        return redirect()->route('pembelian.create')->with('add_sukses', 'Pembelian berhasil dicatat!');
     }
 
     public function delete_pembelian($id)

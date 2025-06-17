@@ -10,15 +10,15 @@
 @endsection
 
 @section('content')
-    <div class="card">
+    <div class="card card-success card-outline">
         <div class="card-header">
-            <h3 class="card-title">Formulir Pembelian</h3>
+            <h3 class="card-title">Formulir Tambah Pembelian Baru</h3>
         </div>
         <form action="{{ route('pembelian.store') }}" method="POST">
             @csrf
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 form-group">
+                    <div class="col-md-4 form-group">
                         <label>Tanggal Pembelian</label>
                         <input type="date" name="tanggal_pembelian"
                             class="form-control @error('tanggal_pembelian') is-invalid @enderror"
@@ -27,7 +27,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-6 form-group">
+                    <div class="col-md-4 form-group">
                         <label>Supplier</label>
                         <select name="id_supplier" class="form-control @error('id_supplier') is-invalid @enderror" required>
                             <option value="">-- Pilih Supplier --</option>
@@ -42,15 +42,18 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="col-md-4 form-group">
+                        <label>Nomor Invoice Supplier (Opsional)</label>
+                        <input type="text" name="nomor_invoice"
+                            class="form-control @error('nomor_invoice') is-invalid @enderror"
+                            value="{{ old('nomor_invoice') }}">
+                        @error('nomor_invoice')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
-
                 <hr>
-
                 <h5>Detail Bahan yang Dibeli</h5>
-                <div id="bahan-container">
-                </div>
-                <button type="button" class="btn btn-success btn-sm mb-3" id="tambah-bahan">Tambah Bahan</button>
-
                 <table class="table table-bordered">
                     <thead>
                         <tr>
@@ -60,15 +63,9 @@
                             <th width="10%">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="bahan-rows">
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th colspan="2" class="text-right">Total Biaya</th>
-                            <th colspan="2" id="total-biaya" class="text-right">Rp 0</th>
-                        </tr>
-                    </tfoot>
+                    <tbody id="bahan-rows"></tbody>
                 </table>
+                <button type="button" class="btn btn-success btn-sm mt-2" id="tambah-bahan">Tambah Bahan</button>
             </div>
             <div class="card-footer">
                 <button type="submit" class="btn btn-primary">Simpan Pembelian</button>
@@ -76,33 +73,131 @@
         </form>
     </div>
 
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title">Riwayat Pembelian</h3>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('pembelian.create') }}" method="GET">
+                <div class="row align-items-end">
+                    <div class="col-md-4 form-group">
+                        <label>Tanggal Mulai</label>
+                        <input type="date" name="tanggal_mulai" class="form-control" value="{{ $tanggal_mulai }}"
+                            required>
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label>Tanggal Selesai</label>
+                        <input type="date" name="tanggal_selesai" class="form-control" value="{{ $tanggal_selesai }}"
+                            required>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label>Supplier</label>
+                        <select name="id_supplier" class="form-control">
+                            <option value="">-- Semua Supplier --</option>
+                            @foreach ($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}"
+                                    {{ $supplier->id == $supplier_id_terpilih ? 'selected' : '' }}>
+                                    {{ $supplier->nama_supplier }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-1 form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Filter</button>
+                    </div>
+                </div>
+            </form>
+            <hr>
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th width="20px">NO</th>
+                        <th>Tanggal</th>
+                        <th>No. Invoice</th>
+                        <th>Supplier</th>
+                        <th class="text-center">Jml. Item</th>
+                        <th class="text-right">Total Biaya</th>
+                        <th class="text-center" width="100px">Aksi</th>
+                    </tr>
+                </thead>
+                @forelse ($pembelians as $item)
+                    <tbody>
+                        <tr data-toggle="collapse" data-target="#detail-{{ $item->id }}" style="cursor: pointer;">
+                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->tanggal_pembelian)->format('d F Y') }}</td>
+                            <td>{{ $item->nomor_invoice }}</td>
+                            <td>{{ $item->nama_supplier }}</td>
+                            <td class="text-center">{{ $item->jumlah_item ?? 0 }}</td>
+                            <td class="text-right">Rp {{ number_format($item->total_biaya, 0, ',', '.') }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-xs btn-info"><i class="fas fa-eye"></i> Detail</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="7" class="p-0" style="border-top: none;">
+                                <div id="detail-{{ $item->id }}" class="collapse">
+                                    <div class="p-3">
+                                        <h6 class="text-bold">Rincian Bahan Baku:</h6>
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nama Bahan</th>
+                                                    <th class="text-right">Jumlah</th>
+                                                    <th class="text-right">Subtotal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (isset($groupedDetails[$item->id]))
+                                                    @foreach ($groupedDetails[$item->id] as $detail)
+                                                        <tr>
+                                                            <td>{{ $detail->nama_bahan }}</td>
+                                                            <td class="text-right">
+                                                                {{ rtrim(rtrim(number_format($detail->jumlah, 2, ',', '.'), '0'), ',') }}
+                                                                {{ $detail->satuan }}</td>
+                                                            <td class="text-right">Rp
+                                                                {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                @endif
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                @empty
+                    <tbody>
+                        <tr>
+                            <td colspan="7" class="text-center">Tidak ada data pembelian pada periode yang dipilih.</td>
+                        </tr>
+                    </tbody>
+                @endforelse
+            </table>
+        </div>
+    </div>
+
     <table style="display: none;">
         <tbody id="bahan-template">
             <tr class="bahan-item">
                 <td>
-                    <select name="bahan[0][id]" class="form-control bahan-select" required>
+                    <select class="form-control bahan-select" required>
                         <option value="">-- Pilih Bahan Baku --</option>
                         @foreach ($bahanBaku as $bahan)
-                            <option value="{{ $bahan->id }}" data-satuan="{{ $bahan->satuan }}">{{ $bahan->nama_bahan }}
-                            </option>
+                            <option value="{{ $bahan->id }}" data-satuan="{{ $bahan->satuan }}">
+                                {{ $bahan->nama_bahan }}</option>
                         @endforeach
                     </select>
                 </td>
                 <td>
-                    <div class="input-group">
-                        <input type="number" name="bahan[0][jumlah]" class="form-control jumlah-input" placeholder="Jumlah"
+                    <div class="input-group"><input type="number" class="form-control jumlah-input" placeholder="Jumlah"
                             min="0.01" step="any" required>
-                        <div class="input-group-append">
-                            <span class="input-group-text satuan-text"></span>
-                        </div>
+                        <div class="input-group-append"><span class="input-group-text satuan-text"></span></div>
                     </div>
                 </td>
-                <td>
-                    <input type="number" name="bahan[0][subtotal]" class="form-control subtotal-input"
-                        placeholder="Subtotal" min="0" required>
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-danger btn-sm hapus-bahan">Hapus</button>
+                <td><input type="number" class="form-control subtotal-input" placeholder="Subtotal" min="0"
+                        required></td>
+                <td class="text-center"><button type="button" class="btn btn-danger btn-sm hapus-bahan">Hapus</button>
                 </td>
             </tr>
         </tbody>
@@ -118,11 +213,9 @@
 
             document.getElementById('tambah-bahan').addEventListener('click', function() {
                 const clone = template.querySelector('.bahan-item').cloneNode(true);
-
                 clone.querySelector('.bahan-select').name = `bahan[${bahanIndex}][id]`;
                 clone.querySelector('.jumlah-input').name = `bahan[${bahanIndex}][jumlah]`;
                 clone.querySelector('.subtotal-input').name = `bahan[${bahanIndex}][subtotal]`;
-
                 tableBody.appendChild(clone);
                 bahanIndex++;
             });
@@ -130,7 +223,6 @@
             tableBody.addEventListener('click', function(e) {
                 if (e.target.classList.contains('hapus-bahan')) {
                     e.target.closest('.bahan-item').remove();
-                    updateTotal();
                 }
             });
 
@@ -141,23 +233,8 @@
                     e.target.closest('.bahan-item').querySelector('.satuan-text').textContent = satuan;
                 }
             });
-
-            tableBody.addEventListener('input', function(e) {
-                if (e.target.classList.contains('subtotal-input')) {
-                    updateTotal();
-                }
-            });
-
-            function updateTotal() {
-                let total = 0;
-                document.querySelectorAll('.subtotal-input').forEach(function(input) {
-                    total += parseFloat(input.value) || 0;
-                });
-                document.getElementById('total-biaya').textContent = 'Rp ' + total.toLocaleString('id-ID');
-            }
         });
     </script>
-
     @if (session('add_sukses'))
         <script>
             var Toast = Swal.mixin({
@@ -168,7 +245,7 @@
             });
             Toast.fire({
                 icon: 'success',
-                title: ' &nbsp; {{ session('add_sukses') }}'
+                title: ' &nbsp; Pembelian bahan baku berhasil dicatat!'
             });
         </script>
     @endif

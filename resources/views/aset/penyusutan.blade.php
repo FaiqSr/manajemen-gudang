@@ -14,10 +14,19 @@
         <div class="card-header">
             <h3 class="card-title">Filter Laporan</h3>
             <div class="card-tools">
-                <a href="{{ request()->fullUrlWithQuery(['export' => 'excel']) }}" class="btn btn-sm btn-success">
+                @php
+                    $queryParams = [
+                        'bulan' => $bulan_terpilih,
+                        'tahun' => $tahun_terpilih,
+                        'id_outlet' => $outlet_id_terpilih,
+                    ];
+                @endphp
+                <a href="{{ route('laporan.penyusutan', array_merge($queryParams, ['export' => 'excel'])) }}"
+                    class="btn btn-sm btn-success">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </a>
-                <a href="{{ request()->fullUrlWithQuery(['export' => 'pdf']) }}" class="btn btn-sm btn-danger">
+                <a href="{{ route('laporan.penyusutan', array_merge($queryParams, ['export' => 'pdf'])) }}"
+                    class="btn btn-sm btn-danger">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
             </div>
@@ -25,7 +34,20 @@
         <div class="card-body">
             <form action="{{ route('laporan.penyusutan') }}" method="GET">
                 <div class="row">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Outlet</label>
+                            <select name="id_outlet" class="form-control">
+                                <option value="">-- Semua Outlet (Total) --</option>
+                                @foreach ($outlets as $outlet)
+                                    <option value="{{ $outlet->id }}"
+                                        {{ $outlet->id == $outlet_id_terpilih ? 'selected' : '' }}>
+                                        {{ $outlet->nama_outlet }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label>Bulan</label>
                             <select name="bulan" class="form-control">
@@ -37,7 +59,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label>Tahun</label>
                             <input type="number" name="tahun" class="form-control" value="{{ $tahun_terpilih }}"

@@ -81,7 +81,8 @@ class AssetController extends Controller
                 $jurnalId = DB::table('jurnal')->insertGetId([
                     'tanggal_transaksi' => $request->tanggal_perolehan,
                     'keterangan' => $keteranganJurnal,
-                    'referensi' => $kode_aset
+                    'referensi' => $kode_aset,
+                    'created_at' => now(),
                 ]);
 
                 DB::table('jurnal_detail')->insert([
@@ -123,15 +124,20 @@ class AssetController extends Controller
     {
         $bulan = $request->input('bulan', now()->month);
         $tahun = $request->input('tahun', now()->year);
+        $outlet_id_terpilih = $request->input('id_outlet');
         $exportType = $request->input('export');
 
         $tanggal_laporan = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth();
 
-        $asets = DB::table('aset as a')
+        $asetsQuery = DB::table('aset as a')
             ->leftJoin('outlets as o', 'a.id_outlet', '=', 'o.id')
             ->select('a.*', 'o.nama_outlet')
-            ->orderBy('a.id_outlet')
-            ->get();
+            ->when($outlet_id_terpilih, function ($query, $outletId) {
+                return $query->where('a.id_outlet', $outletId);
+            })
+            ->orderBy('a.id_outlet');
+
+        $asets = $asetsQuery->get();
 
         $reportData = [];
 
@@ -167,21 +173,34 @@ class AssetController extends Controller
         }
 
         $asetGrouped = collect($reportData)->groupBy('nama_outlet');
-        $namaFile = 'laporan-penyusutan-' . $bulan . '-' . $tahun;
+        $outlets = DB::table('outlets')->orderBy('nama_outlet')->get();
+        $namaOutlet = $outlet_id_terpilih ? $outlets->where('id', $outlet_id_terpilih)->first()->nama_outlet : null;
 
-        if ($exportType == 'excel') {
-            return Excel::download(new PenyusutanExport($asetGrouped, $bulan, $tahun), $namaFile . '.xlsx');
-        }
+        if ($exportType) {
+            $namaFile = 'laporan-penyusutan-' . $bulan . '-' . $tahun;
+            $data_export = [
+                'asetGrouped' => $asetGrouped,
+                'namaOutlet' => $namaOutlet,
+                'bulan_terpilih' => $bulan,
+                'tahun_terpilih' => $tahun
+            ];
 
-        if ($exportType == 'pdf') {
-            $pdf = Pdf::loadView('aset.penyusutan-export', ['asetGrouped' => $asetGrouped]);
-            return $pdf->download($namaFile . '.pdf');
+            if ($exportType == 'excel') {
+                return Excel::download(new PenyusutanExport($data_export), $namaFile . '.xlsx');
+            }
+
+            if ($exportType == 'pdf') {
+                $pdf = PDF::loadView('aset.penyusutan-export', $data_export);
+                return $pdf->download($namaFile . '.pdf');
+            }
         }
 
         return view('aset.penyusutan', [
             'asetGrouped' => $asetGrouped,
+            'outlets' => $outlets,
             'bulan_terpilih' => $bulan,
-            'tahun_terpilih' => $tahun
+            'tahun_terpilih' => $tahun,
+            'outlet_id_terpilih' => $outlet_id_terpilih
         ]);
     }
 }

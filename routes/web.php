@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,10 +25,13 @@ Route::get('/test', function () {
 Route::post('login', 'AuthController@login')->name('login');
 Route::get('logout', 'AuthController@logout')->name('logout');
 
-Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
+Route::group(['middleware' => 'CheckLoginMiddleware', 'middleware' => 'AdminMiddleware'], function () {
     //Home
     Route::get('dashboard', 'DashboardController@index')->name('dashboard_admin');
     Route::get('profil', 'DashboardController@profil')->name('profil');
+
+    // USER
+    Route::get('user', 'UserController@index')->name('user');
 
     // AKUN
     Route::get('akun', 'AkunController@index')->name('akun');
@@ -119,12 +123,12 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     Route::post('/transfer-kas', 'ArusKasController@store')->name('transfer-kas.store');
 
     // Laporan
-    Route::get('/laporan/laba-rugi', 'laporanController@showLaba')->name('laporan.laba-rugi');
-    Route::get('/laporan/arus-kas', 'laporanController@showArusKas')->name('laporan.arus-kas');
-    Route::get('/laporan/ringkasan', 'laporanController@showRingkasan')->name('laporan.ringkasan');
-    Route::get('/laporan/stok-pembelian', 'laporanController@showStokDanPembelian')->name('laporan.stok-pembelian');
-    Route::get('/laporan/neraca', 'laporanController@showNeraca')->name('laporan.neraca');
-    Route::get('/laporan/buku-besar', 'laporanController@showBukuBesar')->name('laporan.buku-besar');
+    Route::get('/laporan/laba-rugi', 'LaporanController@showLaba')->name('laporan.laba-rugi');
+    Route::get('/laporan/arus-kas', 'LaporanController@showArusKas')->name('laporan.arus-kas');
+    Route::get('/laporan/ringkasan', 'LaporanController@showRingkasan')->name('laporan.ringkasan');
+    Route::get('/laporan/stok-pembelian', 'LaporanController@showStokDanPembelian')->name('laporan.stok-pembelian');
+    Route::get('/laporan/neraca', 'LaporanController@showNeraca')->name('laporan.neraca');
+    Route::get('/laporan/buku-besar', 'LaporanController@showBukuBesar')->name('laporan.buku-besar');
 
     // Asset
     Route::get('/aset', 'AssetController@index')->name('aset.index');
@@ -132,4 +136,9 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     Route::post('/aset', 'AssetController@store')->name('aset.store');
     Route::get('/aset/delete/{id}', 'AssetController@destroy')->name('aset.destroy');
     Route::get('/aset/penyusutan', 'AssetController@showPenyusutanAsset')->name('laporan.penyusutan');
+
+    // HUTANG
+    Route::get('/hutang', 'HutangController@index')->name('hutang.index');
+    Route::get('/hutang/bayar/{id}', 'HutangController@create')->name('hutang.bayar.create');
+    Route::post('/hutang/bayar', 'HutangController@store')->name('hutang.bayar.store');
 });

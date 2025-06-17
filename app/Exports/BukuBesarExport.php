@@ -18,10 +18,10 @@ class BukuBesarExport implements FromView, WithTitle, ShouldAutoSize
 
     public function view(): View
     {
-        return view('laporan.export.buku-besar-export', [
-            'akunTerpilih' => $this->data['akunTerpilih'],
-            'transaksi' => $this->data['transaksi'],
-            'saldoAwal' => $this->data['saldoAwal'],
+        return view('laporan.buku-besar-export', [
+            'akunUntukLaporan' => $this->data['akunUntukLaporan'],
+            'transaksiGrouped' => $this->data['transaksiGrouped'],
+            'saldoAwalGrouped' => $this->data['saldoAwalGrouped'],
             'tanggal_mulai' => $this->data['tanggal_mulai'],
             'tanggal_selesai' => $this->data['tanggal_selesai'],
         ]);
@@ -29,6 +29,6 @@ class BukuBesarExport implements FromView, WithTitle, ShouldAutoSize
 
     public function title(): string
     {
-        return 'Buku Besar - ' . $this->data['akunTerpilih']->nama_akun;
+        return 'Laporan Buku Besar';
     }
 }

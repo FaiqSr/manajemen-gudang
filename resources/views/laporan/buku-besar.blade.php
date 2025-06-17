@@ -13,6 +13,25 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Filter Laporan</h3>
+            @if ($akun_terpilih_id)
+                <div class="card-tools">
+                    @php
+                        $queryParams = [
+                            'id_akun' => $akun_terpilih_id,
+                            'tanggal_mulai' => $tanggal_mulai,
+                            'tanggal_selesai' => $tanggal_selesai,
+                        ];
+                    @endphp
+                    <a href="{{ route('laporan.buku-besar', array_merge($queryParams, ['export' => 'excel'])) }}"
+                        class="btn btn-sm btn-success">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </a>
+                    <a href="{{ route('laporan.buku-besar', array_merge($queryParams, ['export' => 'pdf'])) }}"
+                        class="btn btn-sm btn-danger">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                </div>
+            @endif
         </div>
         <div class="card-body">
             <form action="{{ route('laporan.buku-besar') }}" method="GET">
@@ -20,8 +39,8 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Pilih Akun</label>
-                            <select name="id_akun" class="form-control" required>
-                                <option value="">-- Pilih Akun --</option>
+                            <select name="id_akun" class="form-control">
+                                <option value="">-- Semua Akun --</option>
                                 @foreach ($daftarAkun as $akun)
                                     <option value="{{ $akun->id }}"
                                         {{ $akun->id == $akun_terpilih_id ? 'selected' : '' }}>
@@ -56,83 +75,74 @@
         </div>
     </div>
 
-    @if ($akunTerpilih)
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    Buku Besar Akun: <strong>{{ $akunTerpilih->nama_akun }}</strong>
-                </h3>
-                <div class="card-tools">
-                    @php
-                        $queryParams = [
-                            'id_akun' => $akun_terpilih_id,
-                            'tanggal_mulai' => $tanggal_mulai,
-                            'tanggal_selesai' => $tanggal_selesai,
-                        ];
-                    @endphp
-                    <a href="{{ route('laporan.buku-besar', array_merge($queryParams, ['export' => 'excel'])) }}"
-                        class="btn btn-sm btn-success">
-                        <i class="fas fa-file-excel"></i> Export Excel
-                    </a>
-                    <a href="{{ route('laporan.buku-besar', array_merge($queryParams, ['export' => 'pdf'])) }}"
-                        class="btn btn-sm btn-danger">
-                        <i class="fas fa-file-pdf"></i> Export PDF
-                    </a>
+    @if (!$akunUntukLaporan->isEmpty())
+        @foreach ($akunUntukLaporan as $akun)
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Buku Besar Akun: <strong>{{ $akun->nama_akun }}</strong>
+                    </h3>
                 </div>
-            </div>
-            <div class="card-body">
-                <table class="table table-sm table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th width="12%">Tanggal</th>
-                            <th>Keterangan</th>
-                            <th class="text-right" width="15%">Debit</th>
-                            <th class="text-right" width="15%">Kredit</th>
-                            <th class="text-right" width="18%">Saldo Berjalan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="4"><strong>Saldo Awal</strong></td>
-                            <td class="text-right"><strong>Rp {{ number_format($saldoAwal, 0, ',', '.') }}</strong></td>
-                        </tr>
-
-                        @php
-                            $saldoBerjalan = $saldoAwal;
-                        @endphp
-
-                        @forelse($transaksi as $trx)
+                <div class="card-body">
+                    <table class="table table-sm table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th width="12%">Tanggal</th>
+                                <th>Keterangan</th>
+                                <th class="text-right" width="15%">Debit</th>
+                                <th class="text-right" width="15%">Kredit</th>
+                                <th class="text-right" width="18%">Saldo Berjalan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             @php
-                                $perubahan =
-                                    $akunTerpilih->saldo_normal == 'Debit'
-                                        ? $trx->debit - $trx->kredit
-                                        : $trx->kredit - $trx->debit;
-                                $saldoBerjalan += $perubahan;
+                                $saldoAwal = $saldoAwalGrouped[$akun->id]->saldo ?? 0;
+                                if ($akun->saldo_normal == 'Kredit') {
+                                    $saldoAwal *= -1;
+                                }
+                                $saldoBerjalan = $saldoAwal;
                             @endphp
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d-m-Y') }}</td>
-                                <td>{{ $trx->keterangan }} @if ($trx->nama_outlet)
-                                        ({{ $trx->nama_outlet }})
-                                    @endif
-                                </td>
-                                <td class="text-right">Rp {{ number_format($trx->debit, 0, ',', '.') }}</td>
-                                <td class="text-right">Rp {{ number_format($trx->kredit, 0, ',', '.') }}</td>
-                                <td class="text-right">Rp {{ number_format($saldoBerjalan, 0, ',', '.') }}</td>
+                                <td colspan="4"><strong>Saldo Awal</strong></td>
+                                <td class="text-right"><strong>Rp {{ number_format($saldoAwal, 0, ',', '.') }}</strong></td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center"><em>Tidak ada transaksi pada periode yang
-                                        dipilih.</em></td>
+
+                            @if (isset($transaksiGrouped[$akun->id]))
+                                @foreach ($transaksiGrouped[$akun->id] as $trx)
+                                    @php
+                                        $perubahan =
+                                            $akun->saldo_normal == 'Debit'
+                                                ? $trx->debit - $trx->kredit
+                                                : $trx->kredit - $trx->debit;
+                                        $saldoBerjalan += $perubahan;
+                                    @endphp
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d-m-Y') }}</td>
+                                        <td>{{ $trx->keterangan }} @if ($trx->nama_outlet)
+                                                ({{ $trx->nama_outlet }})
+                                            @endif
+                                        </td>
+                                        <td class="text-right">Rp {{ number_format($trx->debit, 0, ',', '.') }}</td>
+                                        <td class="text-right">Rp {{ number_format($trx->kredit, 0, ',', '.') }}</td>
+                                        <td class="text-right">Rp {{ number_format($saldoBerjalan, 0, ',', '.') }}</td>
+                                    </tr>
+                                @endforeach
+                            @endif
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-light">
+                                <th colspan="4">SALDO AKHIR</th>
+                                <th class="text-right">Rp {{ number_format($saldoBerjalan, 0, ',', '.') }}</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-light">
-                            <th colspan="4">SALDO AKHIR</th>
-                            <th class="text-right">Rp {{ number_format($saldoBerjalan, 0, ',', '.') }}</th>
-                        </tr>
-                    </tfoot>
-                </table>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        @endforeach
+    @else
+        <div class="card">
+            <div class="card-body">
+                <p class="text-center">Silakan pilih akun untuk menampilkan buku besar.</p>
             </div>
         </div>
     @endif

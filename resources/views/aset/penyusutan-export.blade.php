@@ -11,13 +11,14 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 20px;
         }
 
         th,
         td {
             border: 1px solid #000;
             padding: 5px;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         th {
@@ -37,12 +38,26 @@
             background-color: #f2f2f2;
             font-weight: bold;
         }
+
+        h2,
+        h3,
+        h4 {
+            text-align: center;
+            margin: 5px 0;
+        }
     </style>
 </head>
 
 <body>
-    @foreach ($asetGrouped as $namaOutlet => $assets)
-        <h3>Aset: {{ $namaOutlet ?: 'Pusat' }}</h3>
+    <h2>Laporan Penyusutan Aktiva Tetap</h2>
+    <h4>
+        Outlet: {{ $namaOutlet ?: 'Semua Outlet (Total)' }} <br>
+        Periode: {{ \Carbon\Carbon::create()->month($bulan_terpilih)->format('F') }} {{ $tahun_terpilih }}
+    </h4>
+    <br>
+
+    @foreach ($asetGrouped as $namaOutletGrup => $assets)
+        <h3>Aset: {{ $namaOutletGrup ?: 'Pusat' }}</h3>
         <table>
             <thead>
                 <tr>
@@ -68,7 +83,7 @@
             </tbody>
             <tfoot>
                 <tr class="total-footer">
-                    <td>Total {{ $namaOutlet ?: 'Pusat' }}</td>
+                    <td>Total {{ $namaOutletGrup ?: 'Pusat' }}</td>
                     <td class="text-right">{{ $assets->sum('harga_perolehan') }}</td>
                     <td></td>
                     <td class="text-right">{{ $assets->sum('penyusutan_bulan_ini') }}</td>
@@ -77,7 +92,6 @@
                 </tr>
             </tfoot>
         </table>
-        <br>
     @endforeach
 </body>
 

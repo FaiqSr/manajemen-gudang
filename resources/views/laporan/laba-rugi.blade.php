@@ -79,6 +79,7 @@
         </div>
         <div class="card-body">
             <table class="table table-sm">
+                {{-- Bagian ini tidak berubah --}}
                 <tr class="bg-light">
                     <th colspan="2">PENDAPATAN</th>
                 </tr>
@@ -97,6 +98,7 @@
                     <th class="text-right">Rp {{ number_format($laporan['totals']['pendapatan'], 0, ',', '.') }}</th>
                 </tr>
 
+                {{-- Bagian ini tidak berubah --}}
                 <tr class="bg-light">
                     <th colspan="2">BEBAN POKOK PENJUALAN</th>
                 </tr>
@@ -115,6 +117,7 @@
                     <th class="text-right">Rp {{ number_format($laporan['totals']['laba_kotor'], 0, ',', '.') }}</th>
                 </tr>
 
+                {{-- INI BAGIAN YANG AKAN MENAMPILKAN BEBAN PENYUSUTAN --}}
                 <tr class="bg-light">
                     <th colspan="2">BEBAN OPERASIONAL</th>
                 </tr>
@@ -133,6 +136,7 @@
                     <th class="text-right">(Rp {{ number_format($laporan['totals']['operasional'], 0, ',', '.') }})</th>
                 </tr>
 
+                {{-- Bagian ini tidak berubah --}}
                 <tr class="bg-success">
                     <th class="text-right">LABA BERSIH</th>
                     <th class="text-right">Rp {{ number_format($laporan['totals']['laba_bersih'], 0, ',', '.') }}</th>

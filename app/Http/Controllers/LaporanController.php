@@ -16,9 +16,89 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class LaporanController extends Controller
 {
+    // public function showLaba(Request $request)
+    // {
+    //     $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
+    //     $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
+    //     $outlet_id_terpilih = $request->input('outlet_id');
+    //     $exportType = $request->input('export');
+
+    //     $baseQuery = DB::table('jurnal_detail as jd')
+    //         ->join('akun as a', 'jd.id_akun', '=', 'a.id')
+    //         ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id');
+
+    //     $query = (clone $baseQuery)
+    //         ->select(
+    //             'a.kategori',
+    //             'a.nama_akun',
+    //             DB::raw('SUM(jd.debit) as total_debit'),
+    //             DB::raw('SUM(jd.kredit) as total_kredit')
+    //         )
+    //         ->whereIn('a.kategori', [
+    //             'Pendapatan',
+    //             'Beban Pokok Penjualan',
+    //             'Beban Operasional'
+    //         ])
+    //         ->whereBetween('j.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
+    //         ->when($outlet_id_terpilih, function ($query, $outletId) {
+    //             return $query->where('jd.id_outlet', $outletId);
+    //         })
+    //         ->groupBy('a.kategori', 'a.nama_akun')
+    //         ->orderBy('a.kategori')
+    //         ->get();
+
+    //     $laporan = [
+    //         'Pendapatan' => [],
+    //         'Beban Pokok Penjualan' => [],
+    //         'Beban Operasional' => [],
+    //         'totals' => ['pendapatan' => 0, 'hpp' => 0, 'operasional' => 0, 'laba_kotor' => 0, 'laba_bersih' => 0]
+    //     ];
+
+    //     foreach ($query as $item) {
+    //         $total = ($item->kategori === 'Pendapatan') ? ($item->total_kredit - $item->total_debit) : ($item->total_debit - $item->total_kredit);
+    //         $laporan[$item->kategori][$item->nama_akun] = $total;
+
+    //         if ($item->kategori === 'Pendapatan') $laporan['totals']['pendapatan'] += $total;
+    //         if ($item->kategori === 'Beban Pokok Penjualan') $laporan['totals']['hpp'] += $total;
+    //         if ($item->kategori === 'Beban Operasional') $laporan['totals']['operasional'] += $total;
+    //     }
+
+    //     $laporan['totals']['laba_kotor'] = $laporan['totals']['pendapatan'] - $laporan['totals']['hpp'];
+    //     $laporan['totals']['laba_bersih'] = $laporan['totals']['laba_kotor'] - $laporan['totals']['operasional'];
+
+    //     $namaOutlet = $outlet_id_terpilih ? DB::table('outlets')->where('id', $outlet_id_terpilih)->value('nama_outlet') : null;
+
+    //     if ($exportType) {
+    //         $namaFile = 'laporan-laba-rugi-' . $tanggal_mulai . '-sd-' . $tanggal_selesai;
+    //         $data_export = [
+    //             'laporan' => $laporan,
+    //             'namaOutlet' => $namaOutlet,
+    //             'tanggal_mulai' => $tanggal_mulai,
+    //             'tanggal_selesai' => $tanggal_selesai
+    //         ];
+
+    //         if ($exportType == 'excel') {
+    //             return Excel::download(new LabaRugiExport($data_export), $namaFile . '.xlsx');
+    //         }
+    //         if ($exportType == 'pdf') {
+    //             $pdf = PDF::loadView('laporan.laba-rugi-export', $data_export);
+    //             return $pdf->download($namaFile . '.pdf');
+    //         }
+    //     }
+
+    //     $outlets = DB::table('outlets')->orderBy('nama_outlet')->get();
+
+    //     return view('laporan.laba-rugi', [
+    //         'laporan' => $laporan,
+    //         'outlets' => $outlets,
+    //         'outlet_id_terpilih' => $outlet_id_terpilih,
+    //         'tanggal_mulai' => $tanggal_mulai,
+    //         'tanggal_selesai' => $tanggal_selesai,
+    //     ]);
+    // }
+
     public function showLaba(Request $request)
     {
-
         $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
         $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
         $outlet_id_terpilih = $request->input('outlet_id');
@@ -35,11 +115,7 @@ class LaporanController extends Controller
                 DB::raw('SUM(jd.debit) as total_debit'),
                 DB::raw('SUM(jd.kredit) as total_kredit')
             )
-            ->whereIn('a.kategori', [
-                'Pendapatan',
-                'Beban Pokok Penjualan',
-                'Beban Operasional'
-            ])
+            ->whereIn('a.kategori', ['Pendapatan', 'Beban Pokok Penjualan', 'Beban Operasional'])
             ->whereBetween('j.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
             ->when($outlet_id_terpilih, function ($query, $outletId) {
                 return $query->where('jd.id_outlet', $outletId);
@@ -58,10 +134,28 @@ class LaporanController extends Controller
         foreach ($query as $item) {
             $total = ($item->kategori === 'Pendapatan') ? ($item->total_kredit - $item->total_debit) : ($item->total_debit - $item->total_kredit);
             $laporan[$item->kategori][$item->nama_akun] = $total;
-
             if ($item->kategori === 'Pendapatan') $laporan['totals']['pendapatan'] += $total;
             if ($item->kategori === 'Beban Pokok Penjualan') $laporan['totals']['hpp'] += $total;
             if ($item->kategori === 'Beban Operasional') $laporan['totals']['operasional'] += $total;
+        }
+
+        $tanggal_laporan_end = Carbon::parse($tanggal_selesai);
+        $penyusutanDihitung = DB::table('aset')
+            ->where('tanggal_perolehan', '<=', $tanggal_laporan_end->toDateString())
+            ->when($outlet_id_terpilih, function ($query, $outletId) {
+                return $query->where('id_outlet', $outletId);
+            })
+            ->get()
+            ->filter(function ($aset) use ($tanggal_laporan_end) {
+                $tanggal_perolehan = Carbon::parse($aset->tanggal_perolehan);
+                $akhir_manfaat = $tanggal_perolehan->copy()->addMonths($aset->masa_manfaat_bulan);
+                return $tanggal_laporan_end->isBefore($akhir_manfaat);
+            })
+            ->sum('penyusutan_per_bulan');
+
+        if ($penyusutanDihitung > 0) {
+            $laporan['Beban Operasional']['Beban Penyusutan'] = ($laporan['Beban Operasional']['Beban Penyusutan'] ?? 0) + $penyusutanDihitung;
+            $laporan['totals']['operasional'] += $penyusutanDihitung;
         }
 
         $laporan['totals']['laba_kotor'] = $laporan['totals']['pendapatan'] - $laporan['totals']['hpp'];
@@ -82,7 +176,7 @@ class LaporanController extends Controller
                 return Excel::download(new LabaRugiExport($data_export), $namaFile . '.xlsx');
             }
             if ($exportType == 'pdf') {
-                $pdf = PDF::loadView('laporan.export.laba-rugi-export', $data_export);
+                $pdf = PDF::loadView('laporan.laba-rugi-export', $data_export);
                 return $pdf->download($namaFile . '.pdf');
             }
         }
@@ -97,7 +191,6 @@ class LaporanController extends Controller
             'tanggal_selesai' => $tanggal_selesai,
         ]);
     }
-
     public function showArusKas(Request $request)
     {
         $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
@@ -398,72 +491,80 @@ class LaporanController extends Controller
 
     public function showBukuBesar(Request $request)
     {
-
         $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
         $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
         $akun_terpilih_id = $request->input('id_akun');
         $exportType = $request->input('export');
 
-        $daftarAkun = DB::table('akun')->orderBy('nama_akun')->get();
-        $transaksi = collect();
-        $saldoAwal = 0;
+        $daftarAkun = DB::table('akun')->orderBy('id')->get();
         $akunTerpilih = null;
+        $akunUntukLaporan = collect();
 
         if ($akun_terpilih_id) {
-            $akunTerpilih = DB::table('akun')->where('id', $akun_terpilih_id)->first();
-
-            $saldoAwal = DB::table('jurnal_detail as jd')
-                ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')
-                ->where('jd.id_akun', $akun_terpilih_id)
-                ->where('j.tanggal_transaksi', '<', $tanggal_mulai)
-                ->sum(DB::raw('jd.debit - jd.kredit'));
-
-            if ($akunTerpilih && $akunTerpilih->saldo_normal == 'Kredit') {
-                $saldoAwal *= -1;
+            $akunTerpilih = $daftarAkun->where('id', $akun_terpilih_id)->first();
+            if ($akunTerpilih) {
+                $akunUntukLaporan->push($akunTerpilih);
             }
+        } else {
+            $akunUntukLaporan = $daftarAkun;
+        }
+        $akunIds = $akunUntukLaporan->pluck('id')->toArray();
 
-            $transaksi = DB::table('jurnal_detail as jd')
-                ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')
-                ->leftJoin('outlets as o', 'jd.id_outlet', '=', 'o.id')
-                ->select(
-                    'j.tanggal_transaksi',
-                    'j.keterangan',
-                    'j.referensi',
-                    'jd.debit',
-                    'jd.kredit',
-                    'o.nama_outlet'
-                )
-                ->where('jd.id_akun', $akun_terpilih_id)
-                ->whereBetween('j.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
-                ->orderBy('j.tanggal_transaksi', 'asc')
-                ->orderBy('j.id', 'asc')
-                ->get();
+        $saldoAwal = DB::table('jurnal_detail as jd')
+            ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')
+            ->select('jd.id_akun', DB::raw('SUM(jd.debit - jd.kredit) as saldo'))
+            ->whereIn('jd.id_akun', $akunIds)
+            ->where('j.tanggal_transaksi', '<', $tanggal_mulai)
+            ->groupBy('jd.id_akun')
+            ->get()
+            ->keyBy('id_akun');
 
+        $transaksi = DB::table('jurnal_detail as jd')
+            ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')
+            ->leftJoin('outlets as o', 'jd.id_outlet', '=', 'o.id')
+            ->select(
+                'jd.id_akun',
+                'j.tanggal_transaksi',
+                'j.keterangan',
+                'j.referensi',
+                'jd.debit',
+                'jd.kredit',
+                'o.nama_outlet'
+            )
+            ->whereIn('jd.id_akun', $akunIds)
+            ->whereBetween('j.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
+            ->orderBy('j.tanggal_transaksi', 'asc')
+            ->orderBy('j.id', 'asc')
+            ->get()
+            ->groupBy('id_akun');
+
+        if ($exportType) {
             $data_export = [
-                'akunTerpilih' => $akunTerpilih,
-                'transaksi' => $transaksi,
-                'saldoAwal' => $saldoAwal,
+                'akunUntukLaporan' => $akunUntukLaporan,
+                'transaksiGrouped' => $transaksi,
+                'saldoAwalGrouped' => $saldoAwal,
                 'tanggal_mulai' => $tanggal_mulai,
                 'tanggal_selesai' => $tanggal_selesai
             ];
-
-            $namaFile = 'buku-besar-' . str_replace(' ', '-', strtolower($akunTerpilih->nama_akun)) . '-' . $tanggal_mulai . '-sd-' . $tanggal_selesai;
+            $namaFile = 'buku-besar-';
+            $namaFile .= $akunTerpilih ? str_replace(' ', '-', strtolower($akunTerpilih->nama_akun)) : 'semua-akun';
+            $namaFile .= '-' . $tanggal_mulai . '-sd-' . $tanggal_selesai;
 
             if ($exportType == 'excel') {
                 return Excel::download(new BukuBesarExport($data_export), $namaFile . '.xlsx');
             }
-
             if ($exportType == 'pdf') {
-                $pdf = Pdf::loadView('laporan.export.buku-besar-export', $data_export);
+                $pdf = PDF::loadView('laporan.buku-besar-export', $data_export)->setPaper('a4', 'landscape');
                 return $pdf->download($namaFile . '.pdf');
             }
         }
 
         return view('laporan.buku-besar', [
             'daftarAkun' => $daftarAkun,
+            'akunUntukLaporan' => $akunUntukLaporan,
             'akunTerpilih' => $akunTerpilih,
-            'transaksi' => $transaksi,
-            'saldoAwal' => $saldoAwal,
+            'transaksiGrouped' => $transaksi,
+            'saldoAwalGrouped' => $saldoAwal,
             'tanggal_mulai' => $tanggal_mulai,
             'tanggal_selesai' => $tanggal_selesai,
             'akun_terpilih_id' => $akun_terpilih_id

@@ -123,6 +123,15 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ url('user') }}"
+                                class="nav-link {{ request()->is('user') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>
+                                    Manajemen User
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ url('produk') }}"
                                 class="nav-link {{ request()->is('produk') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
@@ -174,7 +183,7 @@
                                 class="nav-link {{ request()->is('gudang/stok') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>
-                                    Stok Bahan Baku
+                                    Riwayat Bahan Baku
                                 </p>
                             </a>
                         </li>
@@ -326,6 +335,17 @@
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>
                                     Penyusutan
+                                </p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">Hutang Piutang</li>
+                        <li class="nav-item">
+                            <a href="{{ url('hutang') }}"
+                                class="nav-link {{ request()->is('hutang') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>
+                                    Hutang
                                 </p>
                             </a>
                         </li>
