@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Laporan Stok Outlet</title>
+    <title>Laporan Stok Keseluruhan</title>
     <style>
         body {
             font-family: sans-serif;
@@ -36,40 +36,56 @@
         }
 
         h2,
-        h4 {
-            text-align: center;
+        h3 {
             margin: 5px 0
         }
     </style>
 </head>
 
 <body>
-    <h2>Laporan Stok Bahan Baku per Outlet</h2>
-    <h4>Outlet: {{ $namaOutlet }}</h4><br>
-    @foreach ($stokGrouped as $namaOutletGrup => $stoks)
-        <h3>{{ $namaOutletGrup }}</h3>
+    <h2>Laporan Stok Keseluruhan</h2>
+    <h4>Outlet: {{ $namaOutlet ?: 'Gudang & Semua Outlet' }}</h4>
+    @if (!$namaOutlet)
+        <h3>Stok Gudang Pusat</h3>
         <table>
             <thead>
                 <tr>
-                    <th>No</th>
                     <th>Nama Bahan</th>
                     <th class="text-right">Jumlah Stok</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($stoks as $item)
+                @forelse($stokGudang as $item)
                     <tr>
-                        <td style="text-align:center">{{ $loop->iteration }}</td>
                         <td>{{ $item->nama_bahan }}</td>
                         <td class="text-right">{{ rtrim(rtrim(number_format($item->jumlah_stok, 2, ',', '.'), '0'), ',') }}
                             {{ $item->satuan }}</td>
                 </tr>@empty<tr>
-                        <td colspan="3" style="text-align:center">Tidak ada data stok.</td>
+                        <td colspan="2" style="text-align:center">Stok gudang kosong.</td>
                     </tr>
                 @endforelse
             </tbody>
-        </table>
-    @endforeach
+        </table>@endif @foreach ($stokOutlet as $namaOutletGrup => $stoks)
+            <h3>Stok Outlet: {{ $namaOutletGrup }}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama Bahan</th>
+                        <th class="text-right">Jumlah Stok</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($stoks as $item)
+                        <tr>
+                            <td>{{ $item->nama_bahan }}</td>
+                            <td class="text-right">
+                                {{ rtrim(rtrim(number_format($item->jumlah_stok, 2, ',', '.'), '0'), ',') }}
+                                {{ $item->satuan }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endforeach
 </body>
 
 </html>

@@ -9,6 +9,8 @@ use App\Exports\ArusKasExport;
 use App\Exports\LabaRugiExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\BukuBesarExport;
+use App\Exports\LaporanStokExport;
+use App\Exports\PembelianReportExport;
 use App\Exports\RingkasanExport;
 use App\Exports\StokOutletExport;
 use Illuminate\Support\Facades\DB;
@@ -393,6 +395,63 @@ class LaporanController extends Controller
         ]);
     }
 
+    public function showPembelian(Request $request)
+    {
+        $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
+        $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
+        $supplier_id_terpilih = $request->input('id_supplier');
+        $exportType = $request->input('export');
+
+        $subQuery = DB::table('pembelian_detail')
+                      ->select('id_pembelian', DB::raw('SUM(jumlah) as total_qty'), DB::raw('COUNT(id) as jumlah_item'))
+                      ->groupBy('id_pembelian');
+
+        $pembelianQuery = DB::table('pembelian as p')
+            ->join('suppliers as s', 'p.id_supplier', '=', 's.id')
+            ->leftJoinSub($subQuery, 'pd', function ($join) {
+                $join->on('p.id', '=', 'pd.id_pembelian');
+            })
+            ->select('p.id', 'p.tanggal_pembelian', 'p.nomor_invoice', 's.nama_supplier', 'p.total_biaya', 'p.status', 'p.metode_pembayaran', 'pd.jumlah_item')
+            ->whereBetween('p.tanggal_pembelian', [$tanggal_mulai, $tanggal_selesai])
+            ->when($supplier_id_terpilih, function ($query, $supplierId) {
+                return $query->where('p.id_supplier', $supplierId);
+            })
+            ->orderBy('p.tanggal_pembelian', 'desc')->orderBy('p.id', 'desc');
+
+        $pembelians = $pembelianQuery->get();
+        $pembelianIds = $pembelians->pluck('id')->toArray();
+
+        $groupedDetails = DB::table('pembelian_detail as pd')
+            ->join('bahan_baku as bb', 'pd.id_bahan_baku', '=', 'bb.id')
+            ->select('pd.id_pembelian', 'bb.nama_bahan', 'bb.satuan', 'pd.jumlah', 'pd.subtotal', DB::raw('(CASE WHEN pd.jumlah > 0 THEN pd.subtotal / pd.jumlah ELSE 0 END) as harga_satuan'))
+            ->whereIn('pd.id_pembelian', $pembelianIds)->get()->groupBy('id_pembelian');
+
+        if ($exportType) {
+            $namaFile = 'laporan-pembelian-' . $tanggal_mulai . '-sd-' . $tanggal_selesai;
+            $namaSupplier = $supplier_id_terpilih ? DB::table('suppliers')->where('id', $supplier_id_terpilih)->value('nama_supplier') : 'Semua Supplier';
+            $data_export = [
+                'pembelians' => $pembelians, 'groupedDetails' => $groupedDetails,
+                'namaSupplier' => $namaSupplier, 'tanggal_mulai' => $tanggal_mulai, 'tanggal_selesai' => $tanggal_selesai
+            ];
+            if ($exportType == 'excel') {
+                return Excel::download(new PembelianReportExport($data_export), $namaFile . '.xlsx');
+            }
+            if ($exportType == 'pdf') {
+                $pdf = PDF::loadView('laporan.export.pembelian-export', $data_export)->setPaper('a4', 'landscape');
+                return $pdf->download($namaFile . '.pdf');
+            }
+        }
+        
+        $suppliers = DB::table('suppliers')->orderBy('nama_supplier')->get();
+        
+        return view('laporan.pembelian', [
+            'pembelians' => $pembelians, 'groupedDetails' => $groupedDetails,
+            'suppliers' => $suppliers, 'tanggal_mulai' => $tanggal_mulai,
+            'tanggal_selesai' => $tanggal_selesai, 'supplier_id_terpilih' => $supplier_id_terpilih,
+        ]);
+    }
+    
+
     public function showNeraca(Request $request)
     {
         $per_tanggal = $request->input('per_tanggal', now()->toDateString());
@@ -651,7 +710,13 @@ class LaporanController extends Controller
         $outlet_id_terpilih = $request->input('id_outlet');
         $exportType = $request->input('export');
 
-        $stokQuery = DB::table('stok_outlet as so')
+        $stokGudang = DB::table('bahan_baku as bb')
+            ->leftJoin('stok_gudang as sg', 'bb.id', '=', 'sg.id_bahan_baku')
+            ->select('bb.nama_bahan', 'bb.satuan', DB::raw('COALESCE(sg.jumlah_stok, 0) as jumlah_stok'))
+            ->orderBy('bb.nama_bahan')
+            ->get();
+        
+        $stokOutletQuery = DB::table('stok_outlet as so')
             ->join('outlets as o', 'so.id_outlet', '=', 'o.id')
             ->join('bahan_baku as bb', 'so.id_bahan_baku', '=', 'bb.id')
             ->select('o.nama_outlet', 'bb.nama_bahan', 'bb.satuan', 'so.jumlah_stok')
@@ -662,32 +727,34 @@ class LaporanController extends Controller
             ->orderBy('o.nama_outlet')
             ->orderBy('bb.nama_bahan');
 
-        $stokData = $stokQuery->get();
-        $stokGrouped = $stokData->groupBy('nama_outlet');
+        $stokOutlet = $stokOutletQuery->get()->groupBy('nama_outlet');
 
         if ($exportType) {
-            $namaFile = 'laporan-stok-outlet';
+            $namaFile = 'laporan-stok-keseluruhan';
             $namaOutlet = $outlet_id_terpilih ? DB::table('outlets')->where('id', $outlet_id_terpilih)->value('nama_outlet') : 'Semua Outlet';
             $data_export = [
-                'stokGrouped' => $stokGrouped,
-                'namaOutlet' => $namaOutlet,
+                'stokGudang' => $stokGudang,
+                'stokOutlet' => $stokOutlet,
+                'namaOutlet' => $namaOutlet
             ];
 
             if ($exportType == 'excel') {
-                return Excel::download(new StokOutletExport($data_export), $namaFile . '.xlsx');
+                return Excel::download(new LaporanStokExport($data_export), $namaFile . '.xlsx');
             }
             if ($exportType == 'pdf') {
-                $pdf = PDF::loadView('laporan.export.stok-outlet-export', $data_export);
+                $pdf = PDF::loadView('laporan.export.stok-export', $data_export);
                 return $pdf->download($namaFile . '.pdf');
             }
         }
 
         $outlets = DB::table('outlets')->orderBy('nama_outlet')->get();
 
-        return view('laporan.stok-outlet', [
-            'stokGrouped' => $stokGrouped,
+        return view('laporan.stok', [
+            'stokGudang' => $stokGudang,
+            'stokOutlet' => $stokOutlet,
             'outlets' => $outlets,
             'outlet_id_terpilih' => $outlet_id_terpilih,
         ]);
+        
     }
 }

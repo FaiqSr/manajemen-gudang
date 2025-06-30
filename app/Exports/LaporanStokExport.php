@@ -7,7 +7,7 @@ use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class StokOutletExport implements FromView, WithTitle, ShouldAutoSize
+class LaporanStokExport implements FromView, WithTitle, ShouldAutoSize
 {
     protected $data;
     public function __construct(array $data)
@@ -17,14 +17,15 @@ class StokOutletExport implements FromView, WithTitle, ShouldAutoSize
 
     public function view(): View
     {
-        return view('laporan.export.stok-outlet-export', [
-            'stokGrouped' => $this->data['stokGrouped'],
+        return view('laporan.export.stok-export', [
+            'stokGudang' => $this->data['stokGudang'],
+            'stokOutlet' => $this->data['stokOutlet'],
             'namaOutlet' => $this->data['namaOutlet'],
         ]);
     }
 
     public function title(): string
     {
-        return 'Laporan Stok Outlet';
+        return 'Laporan Stok Keseluruhan';
     }
 }

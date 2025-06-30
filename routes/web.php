@@ -50,14 +50,6 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     Route::post('/satuan/update/{id}', 'SatuanController@update')->name('satuan.update');
     Route::get('/satuan/delete/{id}', 'SatuanController@destroy')->name('satuan.destroy');
 
-    // Produk
-    Route::get('/produk', 'ProdukController@index')->name('produk.index');
-    Route::get('/produk/create', 'ProdukController@create')->name('produk.create');
-    Route::post('/produk', 'ProdukController@store')->name('produk.store');
-    Route::get('/produk/edit/{id}', 'ProdukController@edit')->name('produk.edit');
-    Route::post('/produk/update/{id}', 'ProdukController@update')->name('produk.update');
-    Route::get('/produk/delete/{id}', 'ProdukController@destroy')->name('produk.destroy');
-
     // USER
     Route::get('pengguna/index', 'PenggunaController@index')->name('pengguna/index');
     Route::get('pengguna/add', 'PenggunaController@create')->name('add');
@@ -65,14 +57,6 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     Route::get('pengguna/edit/{id}', 'PenggunaController@edit')->name('pengguna/edit');
     Route::post('pengguna/edit', 'PenggunaController@update')->name('pengguna/edit');
     Route::get('pengguna/pengguna/delete/{id}', 'PenggunaController@delete')->name('pengguna/pengguna/delete');
-
-    // ANGGOTA
-    Route::get('anggota/index', 'AnggotaController@index')->name('anggota/index');
-    Route::get('anggota/add', 'AnggotaController@create')->name('add');
-    Route::post('anggota/add', 'AnggotaController@add')->name('add');
-    Route::get('anggota/edit/{id}', 'AnggotaController@edit')->name('anggota/edit');
-    Route::post('anggota/edit', 'AnggotaController@update')->name('anggota/edit');
-    Route::get('anggota/anggota/delete/{id}', 'AnggotaController@delete')->name('anggota/anggota/delete');
 
     // SUPPLIER
     Route::get('supplier/index', 'SupplierController@index')->name('supplier/index');
@@ -84,19 +68,28 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
 
     Route::get('pembelian', 'SupplierController@pembelian')->name('pembelian.create');
     Route::post('supplier/addpembelian', 'SupplierController@add_pembelian')->name('pembelian.store');
+    Route::post('pembelian/import', 'SupplierController@import')->name('pembelian.import');
 
     Route::get('bahan', 'SupplierController@bahanBaku')->name('supplier/bahan');
     Route::get('bahan/add', 'SupplierController@addBahanBaku')->name('supplier/bahan/add');
-    Route::post('bahan/add', 'SupplierController@createBahanBaku')->name('supplier/bahan/add');
-    Route::get('bahan/edit/{id}', 'SupplierController@editBahanBaku')->name('supplier/bahan/edit');
-    Route::post('bahan/edit', 'SupplierController@updateBahanBaku')->name('supplier/bahan/edit');
+    Route::post('bahan/add', 'SupplierController@createBahanBaku')->name('bahan.add');
+    Route::get('bahan/edit/{id}', 'SupplierController@editBahanBaku')->name('bahan.edit');
+    Route::post('bahan/edit/{id}', 'SupplierController@updateBahanBaku')->name('bahan.update');
 
     // GUDANG
     Route::get('gudang/stok', 'GudangController@stok')->name('gudang/stok');
     Route::get('gudang/stok-terkini', 'GudangController@stokTerkini')->name('gudang/stok-terkini');
 
-    Route::get('gudang/distribusi', 'GudangController@distribusi')->name('gudang/distribusi');
-    Route::post('gudang/distribusi', 'GudangController@distribute')->name('distribusi.store');
+    // Stok Opname
+    Route::get('/stok-opname', 'StokOpnameController@create')->name('stok_opname.create');
+    Route::post('/stok-opname', 'StokOpnameController@store')->name('stok_opname.store');
+    Route::get('/get-bahan-by-outlet', 'StokOpnameController@getBahanByOutlet')->name('get-bahan-by-outlet');
+    Route::post('/stok-opname/import', 'StokOpnameController@import')->name('stok_opname.import');
+
+    // DISTRIBUSI
+    Route::get('/distribusi', 'DistribusiController@index')->name('distribusi.index');
+    Route::post('/distribusi', 'DistribusiController@store')->name('distribusi.store');
+    Route::post('/distribusi/import', 'DistribusiController@import')->name('distribusi.import');
 
     // OUTLET
     Route::get('outlet', 'OutletController@index')->name('outlet');
@@ -110,20 +103,12 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     Route::get('outlet/stok/edit/{stok_outlet_id}', 'OutletController@editStok')->name('outlet.stok.edit');
     Route::post('outlet/stok/update', 'OutletController@updateStok')->name('outlet.stok.update');
 
-    // OUTLET DISTRIBUSI
-    Route::get('outlet/distribusi', 'OutletController@distribusi')->name('outlet/distribusi');
-    Route::get('outlet/distribusi/{id}', 'OutletController@getDistribusi')->name('outlet/distribusi/id');
-
-    // OUTLET OPERASIONAL
-    Route::get('outlet/operasional', 'OutletController@operasional')->name('outlet/operasional');
-    Route::post('outlet/operasional', 'OutletController@storeOperasional')->name('outlet/operasional/store');
-
+    // Operasional Outlet
     Route::get('/biaya-operasional', 'BiayaOperasionalController@index')->name('biaya.index');
     Route::get('/biaya-operasional/create', 'BiayaOperasionalController@create')->name('biaya.create');
     Route::post('/biaya-operasional', 'BiayaOperasionalController@store')->name('biaya.store');
     Route::get('/biaya-operasional/bayar/{id}', 'BiayaOperasionalController@paymentCreate')->name('biaya.bayar.create');
     Route::post('/biaya-operasional/bayar', 'BiayaOperasionalController@paymentStore')->name('biaya.bayar.store');
-
 
     // Penjualan Dan Pendapatan
     Route::get('/penjualan', 'PenjualanController@index')->name('penjualan-bahan.index');
@@ -139,7 +124,7 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     Route::get('/laporan/laba-rugi', 'LaporanController@showLaba')->name('laporan.laba-rugi');
     Route::get('/laporan/arus-kas', 'LaporanController@showArusKas')->name('laporan.arus-kas');
     Route::get('/laporan/ringkasan', 'LaporanController@showRingkasan')->name('laporan.ringkasan');
-    Route::get('/laporan/stok-pembelian', 'LaporanController@showStokDanPembelian')->name('laporan.stok-pembelian');
+    Route::get('/laporan/pembelian', 'LaporanController@showPembelian')->name('laporan.pembelian');
     Route::get('/laporan/neraca', 'LaporanController@showNeraca')->name('laporan.neraca');
     Route::get('/laporan/buku-besar', 'LaporanController@showBukuBesar')->name('laporan.buku-besar');
     Route::get('/laporan/hutang', 'HutangController@laporan')->name('laporan.hutang');
@@ -147,7 +132,7 @@ Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     Route::get('/laporan/distribusi', 'DistribusiController@laporan')->name('laporan.distribusi');
     Route::get('/laporan/penjualan', 'LaporanController@showLaporanPenjualan')->name('laporan.penjualan');
     Route::get('/laporan/pendapatan', 'LaporanController@showLaporanPendapatan')->name('laporan.pendapatan');
-    Route::get('/laporan/stok-outlet', 'LaporanController@showLaporanStok')->name('laporan.stok-outlet');
+    Route::get('/laporan/stok', 'LaporanController@showLaporanStok')->name('laporan.stok');
 
     // Asset
     Route::get('/aset', 'AssetController@index')->name('aset.index');
