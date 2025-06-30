@@ -15,7 +15,7 @@ class CheckLoginMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if(!session('berhasil_login')){
+        if (!session('berhasil_login')) {
             return redirect('/')->with("akses", "Gagal");
         }
         return $next($request);

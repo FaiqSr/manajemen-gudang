@@ -168,7 +168,6 @@ class OutletController extends Controller
         ]);
     }
 
-    // OUTLET OPERASIONAL
     public function operasional()
     {
         $outlets = DB::table('outlets')->orderBy('nama_outlet')->get();

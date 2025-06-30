@@ -25,17 +25,24 @@ Route::get('/test', function () {
 Route::post('login', 'AuthController@login')->name('login');
 Route::get('logout', 'AuthController@logout')->name('logout');
 
-Route::group(['middleware' => 'CheckLoginMiddleware', 'middleware' => 'AdminMiddleware'], function () {
+Route::group(['middleware' => 'CheckLoginMiddleware'], function () {
     //Home
     Route::get('dashboard', 'DashboardController@index')->name('dashboard_admin');
     Route::get('profil', 'DashboardController@profil')->name('profil');
 
     // USER
-    Route::get('user', 'UserController@index')->name('user');
+    Route::get('user', 'UserController@index')->name('user.index');
+    Route::get('user/add', 'UserController@create')->name('user.create');
+    Route::post('user/add', 'UserController@store')->name('user.store');
+    Route::get('user/edit/{id}', 'UserController@edit')->name('user.edit');
+    Route::post('user/edit/{id}', 'UserController@update')->name('user.update');
+    Route::get('user/delete/{id}', 'UserController@destroy')->name('user.destroy');
 
     // AKUN
-    Route::get('akun', 'AkunController@index')->name('akun');
-    Route::get('akun/add', 'AkunController@add')->name('akun/add');
+    Route::get('/akun', 'AkunController@index')->name('akun.index');
+    Route::post('/akun', 'AkunController@store')->name('akun.store');
+    Route::post('/akun/update/{id}', 'AkunController@update')->name('akun.update');
+    Route::get('/akun/delete/{id}', 'AkunController@destroy')->name('akun.destroy');
 
     // SATUAN
     Route::get('/satuan', 'SatuanController@index')->name('satuan.index');
@@ -75,14 +82,14 @@ Route::group(['middleware' => 'CheckLoginMiddleware', 'middleware' => 'AdminMidd
     Route::post('supplier/edit', 'SupplierController@update')->name('supplier/edit');
     Route::get('supplier/supplier/delete/{id}', 'SupplierController@delete')->name('supplier/supplier/delete');
 
-    Route::get('supplier/pembelian', 'SupplierController@pembelian')->name('pembelian.create');
+    Route::get('pembelian', 'SupplierController@pembelian')->name('pembelian.create');
     Route::post('supplier/addpembelian', 'SupplierController@add_pembelian')->name('pembelian.store');
 
-    Route::get('supplier/bahan', 'SupplierController@bahanBaku')->name('supplier/bahan');
-    Route::get('supplier/bahan/add', 'SupplierController@addBahanBaku')->name('supplier/bahan/add');
-    Route::post('supplier/bahan/add', 'SupplierController@createBahanBaku')->name('supplier/bahan/add');
-    Route::get('supplier/bahan/edit/{id}', 'SupplierController@editBahanBaku')->name('supplier/bahan/edit');
-    Route::post('supplier/bahan/edit', 'SupplierController@updateBahanBaku')->name('supplier/bahan/edit');
+    Route::get('bahan', 'SupplierController@bahanBaku')->name('supplier/bahan');
+    Route::get('bahan/add', 'SupplierController@addBahanBaku')->name('supplier/bahan/add');
+    Route::post('bahan/add', 'SupplierController@createBahanBaku')->name('supplier/bahan/add');
+    Route::get('bahan/edit/{id}', 'SupplierController@editBahanBaku')->name('supplier/bahan/edit');
+    Route::post('bahan/edit', 'SupplierController@updateBahanBaku')->name('supplier/bahan/edit');
 
     // GUDANG
     Route::get('gudang/stok', 'GudangController@stok')->name('gudang/stok');
@@ -111,11 +118,17 @@ Route::group(['middleware' => 'CheckLoginMiddleware', 'middleware' => 'AdminMidd
     Route::get('outlet/operasional', 'OutletController@operasional')->name('outlet/operasional');
     Route::post('outlet/operasional', 'OutletController@storeOperasional')->name('outlet/operasional/store');
 
+    Route::get('/biaya-operasional', 'BiayaOperasionalController@index')->name('biaya.index');
+    Route::get('/biaya-operasional/create', 'BiayaOperasionalController@create')->name('biaya.create');
+    Route::post('/biaya-operasional', 'BiayaOperasionalController@store')->name('biaya.store');
+    Route::get('/biaya-operasional/bayar/{id}', 'BiayaOperasionalController@paymentCreate')->name('biaya.bayar.create');
+    Route::post('/biaya-operasional/bayar', 'BiayaOperasionalController@paymentStore')->name('biaya.bayar.store');
+
+
     // Penjualan Dan Pendapatan
-    Route::get('penjualan', 'PenjualanController@index')->name('penjualan');
-    Route::get('penjualan/{id}', 'PenjualanController@show')->name('penjualan/show');
-    Route::get('penjualan/{id}/add', 'PenjualanController@add')->name('penjualan/add');
-    Route::post('penjualan/{id}/add', 'PenjualanController@create')->name('penjualan/add');
+    Route::get('/penjualan', 'PenjualanController@index')->name('penjualan-bahan.index');
+    Route::post('/penjualan', 'PenjualanController@store')->name('penjualan.store');
+    Route::get('/get-stok-outlet', 'PenjualanController@getStok')->name('get-stok.outlet');
 
     Route::get('pendapatan', 'PendapatanController@index')->name('pendapatan');
 
@@ -129,6 +142,12 @@ Route::group(['middleware' => 'CheckLoginMiddleware', 'middleware' => 'AdminMidd
     Route::get('/laporan/stok-pembelian', 'LaporanController@showStokDanPembelian')->name('laporan.stok-pembelian');
     Route::get('/laporan/neraca', 'LaporanController@showNeraca')->name('laporan.neraca');
     Route::get('/laporan/buku-besar', 'LaporanController@showBukuBesar')->name('laporan.buku-besar');
+    Route::get('/laporan/hutang', 'HutangController@laporan')->name('laporan.hutang');
+    Route::get('/laporan/piutang', 'PiutangController@laporan')->name('laporan.piutang');
+    Route::get('/laporan/distribusi', 'DistribusiController@laporan')->name('laporan.distribusi');
+    Route::get('/laporan/penjualan', 'LaporanController@showLaporanPenjualan')->name('laporan.penjualan');
+    Route::get('/laporan/pendapatan', 'LaporanController@showLaporanPendapatan')->name('laporan.pendapatan');
+    Route::get('/laporan/stok-outlet', 'LaporanController@showLaporanStok')->name('laporan.stok-outlet');
 
     // Asset
     Route::get('/aset', 'AssetController@index')->name('aset.index');
@@ -141,4 +160,16 @@ Route::group(['middleware' => 'CheckLoginMiddleware', 'middleware' => 'AdminMidd
     Route::get('/hutang', 'HutangController@index')->name('hutang.index');
     Route::get('/hutang/bayar/{id}', 'HutangController@create')->name('hutang.bayar.create');
     Route::post('/hutang/bayar', 'HutangController@store')->name('hutang.bayar.store');
+
+    // PIUTANG
+    Route::get('/piutang', 'PiutangController@index')->name('piutang.index');
+    Route::get('/piutang/terima/{id}', 'PiutangController@create')->name('piutang.terima.create');
+    Route::post('/piutang/terima', 'PiutangController@store')->name('piutang.terima.store');
+
+    // REKONSILIASI BANK
+    Route::get('/rekonsiliasi-bank', 'RekonsiliasiBankController@index')->name('rekonsiliasi.index');
+
+    // JURNAL UMUM
+    Route::get('/jurnal-umum/create', 'JurnalUmumController@create')->name('jurnal.create');
+    Route::post('/jurnal-umum', 'JurnalUmumController@store')->name('jurnal.store');
 });

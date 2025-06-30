@@ -11,11 +11,10 @@ class HutangController extends Controller
     {
         $hutangs = DB::table('pembelian as p')
             ->join('suppliers as s', 'p.id_supplier', '=', 's.id')
-            ->select('p.id', 'p.tanggal_pembelian', 'p.nomor_invoice', 's.nama_supplier', 'p.total_biaya')
+            ->select('p.id', 'p.tanggal_pembelian', 'p.tanggal_jatuh_tempo', 'p.nomor_invoice', 's.nama_supplier', 'p.total_biaya', 'p.status')
             ->where('p.status', 'Belum Lunas')
-            ->orderBy('p.tanggal_pembelian', 'asc')
+            ->orderBy('p.tanggal_jatuh_tempo', 'asc')
             ->get();
-
         return view('hutang.index', ['hutangs' => $hutangs]);
     }
 
@@ -87,5 +86,58 @@ class HutangController extends Controller
         }
 
         return redirect()->route('hutang.index')->with('add_sukses', 'Pembayaran hutang berhasil dicatat!');
+    }
+
+
+    public function laporan(Request $request)
+    {
+        $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfYear()->toDateString());
+        $tanggal_selesai = $request->input('tanggal_selesai', now()->toDateString());
+        $exportType = $request->input('export');
+
+        $subQueryPembayaran = DB::table('jurnal as j')
+            ->join('jurnal_detail as jd', 'j.id', '=', 'jd.id_jurnal')
+            ->select(
+                DB::raw("SUBSTRING_INDEX(j.referensi, ':', -1) as id_pembelian"),
+                DB::raw('SUM(jd.debit) as total_dibayar')
+            )
+            ->where('j.referensi', 'LIKE', 'pembayaran_hutang:%')
+            ->where('jd.id_akun', 9)
+            ->groupBy('id_pembelian');
+
+        $hutangQuery = DB::table('pembelian as p')
+            ->join('suppliers as s', 'p.id_supplier', '=', 's.id')
+            ->leftJoinSub($subQueryPembayaran, 'ph', function ($join) {
+                $join->on('p.id', '=', 'ph.id_pembelian');
+            })
+            ->select(
+                'p.id',
+                's.nama_supplier',
+                'p.nomor_invoice',
+                'p.tanggal_pembelian',
+                'p.total_biaya',
+                DB::raw('COALESCE(ph.total_dibayar, 0) as total_dibayar'),
+                DB::raw('p.total_biaya - COALESCE(ph.total_dibayar, 0) as sisa_hutang')
+            )
+            ->where('p.metode_pembayaran', 'Kredit')
+            ->whereBetween('p.tanggal_pembelian', [$tanggal_mulai, $tanggal_selesai])
+            ->orderBy('p.tanggal_pembelian', 'asc');
+
+        $dataHutang = $hutangQuery->get()->where('sisa_hutang', '>', 0);
+
+        if ($exportType) {
+            $namaFile = 'laporan-hutang-' . $tanggal_mulai . '-sd-' . $tanggal_selesai;
+            $data = ['dataHutang' => $dataHutang, 'tanggal_mulai' => $tanggal_mulai, 'tanggal_selesai' => $tanggal_selesai];
+
+            if ($exportType == 'excel') {
+                return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\LaporanHutangExport($data), $namaFile . '.xlsx');
+            }
+            if ($exportType == 'pdf') {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('laporan.export.hutang-export', $data)->setPaper('a4', 'landscape');
+                return $pdf->download($namaFile . '.pdf');
+            }
+        }
+
+        return view('laporan.hutang', compact('dataHutang', 'tanggal_mulai', 'tanggal_selesai'));
     }
 }

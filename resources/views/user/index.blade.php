@@ -1,13 +1,10 @@
 @extends('layout.main')
-
-@section('title', 'supplier')
+@section('title', 'Manajemen User')
 
 @section('breadcrums')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1>Supplier - Bahan Baku</h1>
-        </div>
-        <div class="col-sm-6">
+            <h1>Manajemen User</h1>
         </div>
     </div>
 @endsection
@@ -15,7 +12,7 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <a href="{{ url('supplier/bahan/add') }}" class="btn btn-primary"> <i class="fas fa-plus"></i> Tambah Data</a>
+            <a href="{{ route('user.create') }}" class="btn btn-primary"> <i class="fas fa-plus"></i> Tambah User</a>
         </div>
         <div class="card-body">
             <table id="table1" class="table table-bordered table-hover">
@@ -36,10 +33,10 @@
                             <td>{{ $item->email }}</td>
                             <td>{{ $item->nama_role }}</td>
                             <td class="text-center">
-                                <a href="{{ url('supplier/bahan/edit/' . $item->id) }}" class="btn btn-xs btn-warning"
-                                    title="Edit"><i class="fas fa-edit"></i> </a>
-                                <button onclick="del({{ $item->id }})" class="btn btn-xs btn-danger" title="Hapus"><i
-                                        class="fas fa-trash"></i> </button>
+                                <a href="{{ route('user.edit', $item->id) }}" class="btn btn-xs btn-warning"
+                                    title="Edit"><i class="fas fa-edit"></i></a>
+                                <button onclick="del('{{ $item->id }}')" class="btn btn-xs btn-danger" title="Hapus"><i
+                                        class="fas fa-trash"></i></button>
                             </td>
                         </tr>
                     @endforeach
@@ -47,54 +44,10 @@
             </table>
         </div>
     </div>
-
 @endsection
 
 @section('script')
-
     <script>
-        function add_sukses() {
-            var Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 2000
-            });
-
-            Toast.fire({
-                icon: 'success',
-                title: ' &nbsp; Tambah Data Berhasil'
-            });
-        }
-
-        function edit_sukses() {
-            var Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 2000
-            });
-
-            Toast.fire({
-                icon: 'success',
-                title: ' &nbsp; Update Data Berhasil'
-            });
-        }
-
-        function delete_sukses() {
-            var Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 2000
-            });
-
-            Toast.fire({
-                icon: 'success',
-                title: ' &nbsp; Hapus Data Berhasil'
-            });
-        }
-
         function del(id) {
             Swal.fire({
                 title: "Ingin Menghapus Data ini?",
@@ -105,27 +58,38 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = "{{ url('supplier/bahan/delete') }}/" + id;
+                    window.location.href = "{{ url('user/delete') }}/" + id;
                 }
             });
         }
     </script>
 
-    @if (session('add_sukses'))
+    @if (session('add_sukses') || session('edit_sukses') || session('delete_sukses'))
         <script>
-            add_sukses();
+            var Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            Toast.fire({
+                icon: 'success',
+                title: ' &nbsp; {{ session('add_sukses') ?: (session('edit_sukses') ?: session('delete_sukses')) }}'
+            });
         </script>
     @endif
-
-    @if (session('edit_sukses'))
+    @if (session('error'))
         <script>
-            edit_sukses();
-        </script>
-    @endif
-
-    @if (session('delete_sukses'))
-        <script>
-            delete_sukses();
+            var Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000
+            });
+            Toast.fire({
+                icon: 'error',
+                title: ' &nbsp; {{ session('error') }}'
+            });
         </script>
     @endif
 @endsection

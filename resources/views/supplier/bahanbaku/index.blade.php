@@ -1,11 +1,11 @@
 @extends('layout.main')
 
-@section('title', 'supplier')
+@section('title', 'Master')
 
 @section('breadcrums')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1>Supplier - Bahan Baku</h1>
+            <h1>Master- Bahan Baku</h1>
         </div>
         <div class="col-sm-6">
         </div>
@@ -15,7 +15,7 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <a href="{{ url('supplier/bahan/add') }}" class="btn btn-primary"> <i class="fas fa-plus"></i> Tambah Data</a>
+            <a href="{{ url('bahan/add') }}" class="btn btn-primary"> <i class="fas fa-plus"></i> Tambah Data</a>
         </div>
         <div class="card-body">
             <table id="table1" class="table table-bordered table-hover">
@@ -23,7 +23,6 @@
                     <tr>
                         <th width="20px">NO</th>
                         <th>Nama Bahan</th>
-                        <th>Satuan</th>
                         <th class="text-center" width="100px">Aksi</th>
                     </tr>
                 </thead>
@@ -33,12 +32,6 @@
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td>{{ $item->nama_bahan }}</td>
                             <td>{{ $item->satuan }}</td>
-                            <td class="text-center">
-                                <a href="{{ url('supplier/bahan/edit/' . $item->id) }}" class="btn btn-xs btn-warning"
-                                    title="Edit"><i class="fas fa-edit"></i> </a>
-                                <button onclick="del({{ $item->id }})" class="btn btn-xs btn-danger" title="Hapus"><i
-                                        class="fas fa-trash"></i> </button>
-                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -103,7 +96,7 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = "{{ url('supplier/bahan/delete') }}/" + id;
+                    window.location.href = "{{ url('bahan/delete') }}/" + id;
                 }
             });
         }

@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\ArusKasExport;
-use App\Exports\BukuBesarExport;
-use App\Exports\LabaRugiExport;
-use App\Exports\NeracaExport;
-use App\Exports\RingkasanExport;
-use App\Exports\StokPembelianExport;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Exports\NeracaExport;
+use App\Exports\ArusKasExport;
+use App\Exports\LabaRugiExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\BukuBesarExport;
+use App\Exports\RingkasanExport;
+use App\Exports\StokOutletExport;
 use Illuminate\Support\Facades\DB;
+use App\Exports\StokPembelianExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PenjualanReportExport;
+use App\Exports\PendapatanReportExport;
 
 class LaporanController extends Controller
 {
@@ -104,17 +107,10 @@ class LaporanController extends Controller
         $outlet_id_terpilih = $request->input('outlet_id');
         $exportType = $request->input('export');
 
-        $baseQuery = DB::table('jurnal_detail as jd')
-            ->join('akun as a', 'jd.id_akun', '=', 'a.id')
-            ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id');
+        $baseQuery = DB::table('jurnal_detail as jd')->join('akun as a', 'jd.id_akun', '=', 'a.id')->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id');
 
         $query = (clone $baseQuery)
-            ->select(
-                'a.kategori',
-                'a.nama_akun',
-                DB::raw('SUM(jd.debit) as total_debit'),
-                DB::raw('SUM(jd.kredit) as total_kredit')
-            )
+            ->select('a.kategori', 'a.nama_akun', DB::raw('SUM(jd.debit) as total_debit'), DB::raw('SUM(jd.kredit) as total_kredit'))
             ->whereIn('a.kategori', ['Pendapatan', 'Beban Pokok Penjualan', 'Beban Operasional'])
             ->whereBetween('j.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
             ->when($outlet_id_terpilih, function ($query, $outletId) {
@@ -128,15 +124,21 @@ class LaporanController extends Controller
             'Pendapatan' => [],
             'Beban Pokok Penjualan' => [],
             'Beban Operasional' => [],
-            'totals' => ['pendapatan' => 0, 'hpp' => 0, 'operasional' => 0, 'laba_kotor' => 0, 'laba_bersih' => 0]
+            'totals' => ['pendapatan' => 0, 'hpp' => 0, 'operasional' => 0, 'laba_kotor' => 0, 'laba_bersih' => 0],
         ];
 
         foreach ($query as $item) {
-            $total = ($item->kategori === 'Pendapatan') ? ($item->total_kredit - $item->total_debit) : ($item->total_debit - $item->total_kredit);
+            $total = $item->kategori === 'Pendapatan' ? $item->total_kredit - $item->total_debit : $item->total_debit - $item->total_kredit;
             $laporan[$item->kategori][$item->nama_akun] = $total;
-            if ($item->kategori === 'Pendapatan') $laporan['totals']['pendapatan'] += $total;
-            if ($item->kategori === 'Beban Pokok Penjualan') $laporan['totals']['hpp'] += $total;
-            if ($item->kategori === 'Beban Operasional') $laporan['totals']['operasional'] += $total;
+            if ($item->kategori === 'Pendapatan') {
+                $laporan['totals']['pendapatan'] += $total;
+            }
+            if ($item->kategori === 'Beban Pokok Penjualan') {
+                $laporan['totals']['hpp'] += $total;
+            }
+            if ($item->kategori === 'Beban Operasional') {
+                $laporan['totals']['operasional'] += $total;
+            }
         }
 
         $tanggal_laporan_end = Carbon::parse($tanggal_selesai);
@@ -169,14 +171,14 @@ class LaporanController extends Controller
                 'laporan' => $laporan,
                 'namaOutlet' => $namaOutlet,
                 'tanggal_mulai' => $tanggal_mulai,
-                'tanggal_selesai' => $tanggal_selesai
+                'tanggal_selesai' => $tanggal_selesai,
             ];
 
             if ($exportType == 'excel') {
                 return Excel::download(new LabaRugiExport($data_export), $namaFile . '.xlsx');
             }
             if ($exportType == 'pdf') {
-                $pdf = PDF::loadView('laporan.laba-rugi-export', $data_export);
+                $pdf = PDF::loadView('laporan.export.laba-rugi-export', $data_export);
                 return $pdf->download($namaFile . '.pdf');
             }
         }
@@ -212,11 +214,7 @@ class LaporanController extends Controller
             ->join('jurnal', 'cash_entry.id_jurnal', '=', 'jurnal.id')
             ->join('jurnal_detail as offsetting_entry', 'cash_entry.id_jurnal', '=', 'offsetting_entry.id_jurnal')
             ->join('akun as offsetting_akun', 'offsetting_entry.id_akun', '=', 'offsetting_akun.id')
-            ->select(
-                'offsetting_akun.kategori',
-                'cash_entry.debit as kas_masuk',
-                'cash_entry.kredit as kas_keluar'
-            )
+            ->select('offsetting_akun.kategori', 'cash_entry.debit as kas_masuk', 'cash_entry.kredit as kas_keluar')
             ->whereIn('cash_entry.id_akun', $akunKasBankIds)
             ->whereNotIn('offsetting_entry.id_akun', $akunKasBankIds)
             ->whereBetween('jurnal.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
@@ -233,7 +231,7 @@ class LaporanController extends Controller
                 'keluar_investasi' => 0,
                 'masuk_pendanaan' => 0,
                 'keluar_pendanaan' => 0,
-            ]
+            ],
         ];
 
         foreach ($query as $trx) {
@@ -241,14 +239,23 @@ class LaporanController extends Controller
             $jumlah = $is_cash_in ? $trx->kas_masuk : $trx->kas_keluar;
 
             if (in_array($trx->kategori, ['Pendapatan', 'Beban Pokok Penjualan', 'Beban Operasional', 'Piutang Usaha', 'Utang Usaha'])) {
-                if ($is_cash_in) $laporan['totals']['masuk_operasi'] += $jumlah;
-                else $laporan['totals']['keluar_operasi'] += $jumlah;
+                if ($is_cash_in) {
+                    $laporan['totals']['masuk_operasi'] += $jumlah;
+                } else {
+                    $laporan['totals']['keluar_operasi'] += $jumlah;
+                }
             } elseif ($trx->kategori === 'Aset') {
-                if ($is_cash_in) $laporan['totals']['masuk_investasi'] += $jumlah;
-                else $laporan['totals']['keluar_investasi'] += $jumlah;
+                if ($is_cash_in) {
+                    $laporan['totals']['masuk_investasi'] += $jumlah;
+                } else {
+                    $laporan['totals']['keluar_investasi'] += $jumlah;
+                }
             } elseif (in_array($trx->kategori, ['Liabilitas', 'Ekuitas'])) {
-                if ($is_cash_in) $laporan['totals']['masuk_pendanaan'] += $jumlah;
-                else $laporan['totals']['keluar_pendanaan'] += $jumlah;
+                if ($is_cash_in) {
+                    $laporan['totals']['masuk_pendanaan'] += $jumlah;
+                } else {
+                    $laporan['totals']['keluar_pendanaan'] += $jumlah;
+                }
             }
         }
 
@@ -259,7 +266,7 @@ class LaporanController extends Controller
             'saldoAwal' => $saldoAwal,
             'namaOutlet' => $namaOutlet,
             'tanggal_mulai' => $tanggal_mulai,
-            'tanggal_selesai' => $tanggal_selesai
+            'tanggal_selesai' => $tanggal_selesai,
         ];
 
         if ($exportType == 'excel') {
@@ -287,7 +294,6 @@ class LaporanController extends Controller
 
     public function showRingkasan(Request $request)
     {
-
         $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
         $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
         $outlet_id_terpilih = $request->input('outlet_id');
@@ -301,20 +307,11 @@ class LaporanController extends Controller
                 return $query->where('jd.id_outlet', $outletId);
             });
 
-        $totalPendapatan = (clone $baseQuery)
-            ->where('a.kategori', 'Pendapatan')
-            ->sum(DB::raw('jd.kredit - jd.debit'));
+        $totalPendapatan = (clone $baseQuery)->where('a.kategori', 'Pendapatan')->sum(DB::raw('jd.kredit - jd.debit'));
 
-        $totalBiayaOperasional = (clone $baseQuery)
-            ->where('a.kategori', 'Beban Operasional')
-            ->sum(DB::raw('jd.debit - jd.kredit'));
+        $totalBiayaOperasional = (clone $baseQuery)->where('a.kategori', 'Beban Operasional')->sum(DB::raw('jd.debit - jd.kredit'));
 
-        $rincianBiaya = (clone $baseQuery)
-            ->select('a.nama_akun', DB::raw('SUM(jd.debit - jd.kredit) as total'))
-            ->where('a.kategori', 'Beban Operasional')
-            ->groupBy('a.nama_akun')
-            ->orderBy('a.nama_akun')
-            ->get();
+        $rincianBiaya = (clone $baseQuery)->select('a.nama_akun', DB::raw('SUM(jd.debit - jd.kredit) as total'))->where('a.kategori', 'Beban Operasional')->groupBy('a.nama_akun')->orderBy('a.nama_akun')->get();
 
         $namaOutlet = $outlet_id_terpilih ? DB::table('outlets')->where('id', $outlet_id_terpilih)->value('nama_outlet') : null;
 
@@ -358,22 +355,12 @@ class LaporanController extends Controller
         $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
         $exportType = $request->input('export');
 
-        $daftarBahan = DB::table('bahan_baku as bb')
-            ->leftJoin('stok_gudang as sg', 'bb.id', '=', 'sg.id_bahan_baku')
-            ->select('bb.id', 'bb.nama_bahan', 'bb.satuan', DB::raw('COALESCE(sg.jumlah_stok, 0) as jumlah_stok'))
-            ->orderBy('bb.nama_bahan')
-            ->get();
+        $daftarBahan = DB::table('bahan_baku as bb')->leftJoin('stok_gudang as sg', 'bb.id', '=', 'sg.id_bahan_baku')->select('bb.id', 'bb.nama_bahan', 'bb.satuan', DB::raw('COALESCE(sg.jumlah_stok, 0) as jumlah_stok'))->orderBy('bb.nama_bahan')->get();
 
         $detailPembelian = DB::table('pembelian_detail as pd')
             ->join('pembelian as p', 'pd.id_pembelian', '=', 'p.id')
             ->join('suppliers as s', 'p.id_supplier', '=', 's.id')
-            ->select(
-                'pd.id_bahan_baku',
-                'p.tanggal_pembelian',
-                's.nama_supplier',
-                'pd.jumlah',
-                'pd.subtotal'
-            )
+            ->select('pd.id_bahan_baku', 'p.tanggal_pembelian', 's.nama_supplier', 'pd.jumlah', 'pd.subtotal')
             ->whereBetween('p.tanggal_pembelian', [$tanggal_mulai, $tanggal_selesai])
             ->orderBy('p.tanggal_pembelian', 'desc')
             ->get()
@@ -385,7 +372,7 @@ class LaporanController extends Controller
                 'daftarBahan' => $daftarBahan,
                 'detailPembelian' => $detailPembelian,
                 'tanggal_mulai' => $tanggal_mulai,
-                'tanggal_selesai' => $tanggal_selesai
+                'tanggal_selesai' => $tanggal_selesai,
             ];
 
             if ($exportType == 'excel') {
@@ -413,21 +400,13 @@ class LaporanController extends Controller
         $awal_tahun = $tanggal_obj->copy()->startOfYear()->toDateString();
         $exportType = $request->input('export');
 
-        $baseQuery = DB::table('jurnal_detail as jd')
-            ->join('akun as a', 'jd.id_akun', '=', 'a.id')
-            ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id');
+        $baseQuery = DB::table('jurnal_detail as jd')->join('akun as a', 'jd.id_akun', '=', 'a.id')->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id');
 
-        $labaRugiTahunBerjalanQuery = (clone $baseQuery)
-            ->whereIn('a.kategori', ['Pendapatan', 'Beban Pokok Penjualan', 'Beban Operasional'])
-            ->whereBetween('j.tanggal_transaksi', [$awal_tahun, $per_tanggal]);
+        $labaRugiTahunBerjalanQuery = (clone $baseQuery)->whereIn('a.kategori', ['Pendapatan', 'Beban Pokok Penjualan', 'Beban Operasional'])->whereBetween('j.tanggal_transaksi', [$awal_tahun, $per_tanggal]);
 
-        $totalPendapatan = (clone $labaRugiTahunBerjalanQuery)
-            ->where('a.kategori', 'Pendapatan')
-            ->sum(DB::raw('jd.kredit - jd.debit'));
+        $totalPendapatan = (clone $labaRugiTahunBerjalanQuery)->where('a.kategori', 'Pendapatan')->sum(DB::raw('jd.kredit - jd.debit'));
 
-        $totalBeban = (clone $labaRugiTahunBerjalanQuery)
-            ->whereIn('a.kategori', ['Beban Pokok Penjualan', 'Beban Operasional'])
-            ->sum(DB::raw('jd.debit - jd.kredit'));
+        $totalBeban = (clone $labaRugiTahunBerjalanQuery)->whereIn('a.kategori', ['Beban Pokok Penjualan', 'Beban Operasional'])->sum(DB::raw('jd.debit - jd.kredit'));
 
         $labaRugiTahunBerjalan = $totalPendapatan - $totalBeban;
 
@@ -458,9 +437,15 @@ class LaporanController extends Controller
             }
             $laporan[$akun->kategori][$akun->nama_akun] = $saldoAkhir;
 
-            if ($akun->kategori == 'Aset') $totalAset += $saldoAkhir;
-            if ($akun->kategori == 'Liabilitas') $totalLiabilitas += $saldoAkhir;
-            if ($akun->kategori == 'Ekuitas') $totalEkuitas += $saldoAkhir;
+            if ($akun->kategori == 'Aset') {
+                $totalAset += $saldoAkhir;
+            }
+            if ($akun->kategori == 'Liabilitas') {
+                $totalLiabilitas += $saldoAkhir;
+            }
+            if ($akun->kategori == 'Ekuitas') {
+                $totalEkuitas += $saldoAkhir;
+            }
         }
 
         $laporan['Ekuitas']['Laba/Rugi Tahun Berjalan'] = $labaRugiTahunBerjalan;
@@ -469,7 +454,7 @@ class LaporanController extends Controller
         $laporan['totals'] = [
             'aset' => $totalAset,
             'liabilitas' => $totalLiabilitas,
-            'ekuitas' => $totalEkuitas
+            'ekuitas' => $totalEkuitas,
         ];
 
         $namaFile = 'laporan-neraca-per-' . $per_tanggal;
@@ -510,27 +495,12 @@ class LaporanController extends Controller
         }
         $akunIds = $akunUntukLaporan->pluck('id')->toArray();
 
-        $saldoAwal = DB::table('jurnal_detail as jd')
-            ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')
-            ->select('jd.id_akun', DB::raw('SUM(jd.debit - jd.kredit) as saldo'))
-            ->whereIn('jd.id_akun', $akunIds)
-            ->where('j.tanggal_transaksi', '<', $tanggal_mulai)
-            ->groupBy('jd.id_akun')
-            ->get()
-            ->keyBy('id_akun');
+        $saldoAwal = DB::table('jurnal_detail as jd')->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')->select('jd.id_akun', DB::raw('SUM(jd.debit - jd.kredit) as saldo'))->whereIn('jd.id_akun', $akunIds)->where('j.tanggal_transaksi', '<', $tanggal_mulai)->groupBy('jd.id_akun')->get()->keyBy('id_akun');
 
         $transaksi = DB::table('jurnal_detail as jd')
             ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')
             ->leftJoin('outlets as o', 'jd.id_outlet', '=', 'o.id')
-            ->select(
-                'jd.id_akun',
-                'j.tanggal_transaksi',
-                'j.keterangan',
-                'j.referensi',
-                'jd.debit',
-                'jd.kredit',
-                'o.nama_outlet'
-            )
+            ->select('jd.id_akun', 'j.tanggal_transaksi', 'j.keterangan', 'j.referensi', 'jd.debit', 'jd.kredit', 'o.nama_outlet')
             ->whereIn('jd.id_akun', $akunIds)
             ->whereBetween('j.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
             ->orderBy('j.tanggal_transaksi', 'asc')
@@ -544,7 +514,7 @@ class LaporanController extends Controller
                 'transaksiGrouped' => $transaksi,
                 'saldoAwalGrouped' => $saldoAwal,
                 'tanggal_mulai' => $tanggal_mulai,
-                'tanggal_selesai' => $tanggal_selesai
+                'tanggal_selesai' => $tanggal_selesai,
             ];
             $namaFile = 'buku-besar-';
             $namaFile .= $akunTerpilih ? str_replace(' ', '-', strtolower($akunTerpilih->nama_akun)) : 'semua-akun';
@@ -567,7 +537,157 @@ class LaporanController extends Controller
             'saldoAwalGrouped' => $saldoAwal,
             'tanggal_mulai' => $tanggal_mulai,
             'tanggal_selesai' => $tanggal_selesai,
-            'akun_terpilih_id' => $akun_terpilih_id
+            'akun_terpilih_id' => $akun_terpilih_id,
+        ]);
+    }
+
+    public function showLaporanPenjualan(Request $request)
+    {
+        $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
+        $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
+        $outlet_id_terpilih = $request->input('id_outlet');
+        $exportType = $request->input('export');
+
+        $penjualanQuery = DB::table('penjualan as p')
+            ->join('outlets as o', 'p.id_outlet', '=', 'o.id')
+            ->select('p.id', 'p.tanggal_penjualan', 'o.nama_outlet', 'p.nama_pelanggan', 'p.metode_pembayaran', 'p.status', 'p.total_pendapatan')
+            ->whereBetween('p.tanggal_penjualan', [$tanggal_mulai, $tanggal_selesai])
+            ->when($outlet_id_terpilih, function ($query, $outletId) {
+                return $query->where('p.id_outlet', $outletId);
+            })
+            ->orderBy('p.tanggal_penjualan', 'desc')
+            ->orderBy('p.id', 'desc');
+
+        $penjualans = $penjualanQuery->get();
+        $penjualanIds = $penjualans->pluck('id')->toArray();
+
+        $groupedDetails = DB::table('penjualan_detail as pd')->join('bahan_baku as bb', 'pd.id_bahan_baku', '=', 'bb.id')->select('pd.id_penjualan', 'bb.nama_bahan', 'pd.jumlah', 'pd.harga_saat_transaksi', 'pd.subtotal')->whereIn('pd.id_penjualan', $penjualanIds)->get()->groupBy('id_penjualan');
+
+        if ($exportType) {
+            $namaFile = 'laporan-penjualan-' . $tanggal_mulai . '-sd-' . $tanggal_selesai;
+            $namaOutlet = $outlet_id_terpilih ? DB::table('outlets')->where('id', $outlet_id_terpilih)->value('nama_outlet') : 'Semua Outlet';
+            $data_export = [
+                'penjualans' => $penjualans,
+                'groupedDetails' => $groupedDetails,
+                'namaOutlet' => $namaOutlet,
+                'tanggal_mulai' => $tanggal_mulai,
+                'tanggal_selesai' => $tanggal_selesai,
+            ];
+
+            if ($exportType == 'excel') {
+                return Excel::download(new PenjualanReportExport($data_export), $namaFile . '.xlsx');
+            }
+            if ($exportType == 'pdf') {
+                $pdf = PDF::loadView('laporan.export.penjualan-export', $data_export)->setPaper('a4', 'landscape');
+                return $pdf->download($namaFile . '.pdf');
+            }
+        }
+
+        $outlets = DB::table('outlets')->orderBy('nama_outlet')->get();
+
+        return view('laporan.penjualan', [
+            'penjualans' => $penjualans,
+            'groupedDetails' => $groupedDetails,
+            'outlets' => $outlets,
+            'tanggal_mulai' => $tanggal_mulai,
+            'tanggal_selesai' => $tanggal_selesai,
+            'outlet_id_terpilih' => $outlet_id_terpilih,
+        ]);
+    }
+
+    public function showLaporanPendapatan(Request $request)
+    {
+        $tanggal_mulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
+        $tanggal_selesai = $request->input('tanggal_selesai', now()->endOfMonth()->toDateString());
+        $outlet_id_terpilih = $request->input('id_outlet');
+        $exportType = $request->input('export');
+
+        $pendapatanQuery = DB::table('jurnal_detail as jd')
+            ->join('akun as a', 'jd.id_akun', '=', 'a.id')
+            ->join('jurnal as j', 'jd.id_jurnal', '=', 'j.id')
+            ->select('a.nama_akun', DB::raw('SUM(jd.kredit - jd.debit) as total_pendapatan'))
+            ->where('a.kategori', '=', 'Pendapatan')
+            ->whereBetween('j.tanggal_transaksi', [$tanggal_mulai, $tanggal_selesai])
+            ->when($outlet_id_terpilih, function ($query, $outletId) {
+                return $query->where('jd.id_outlet', $outletId);
+            })
+            ->groupBy('a.nama_akun')
+            ->orderBy('a.nama_akun');
+
+        $laporanPendapatan = $pendapatanQuery->get();
+
+        if ($exportType) {
+            $namaFile = 'laporan-pendapatan-' . $tanggal_mulai . '-sd-' . $tanggal_selesai;
+            $namaOutlet = $outlet_id_terpilih ? DB::table('outlets')->where('id', $outlet_id_terpilih)->value('nama_outlet') : 'Semua Outlet';
+            $data_export = [
+                'laporanPendapatan' => $laporanPendapatan,
+                'namaOutlet' => $namaOutlet,
+                'tanggal_mulai' => $tanggal_mulai,
+                'tanggal_selesai' => $tanggal_selesai,
+            ];
+
+            if ($exportType == 'excel') {
+                return Excel::download(new PendapatanReportExport($data_export), $namaFile . '.xlsx');
+            }
+            if ($exportType == 'pdf') {
+                $pdf = PDF::loadView('laporan.export.pendapatan-export', $data_export);
+                return $pdf->download($namaFile . '.pdf');
+            }
+        }
+
+        $outlets = DB::table('outlets')->orderBy('nama_outlet')->get();
+
+        return view('laporan.pendapatan', [
+            'laporanPendapatan' => $laporanPendapatan,
+            'outlets' => $outlets,
+            'tanggal_mulai' => $tanggal_mulai,
+            'tanggal_selesai' => $tanggal_selesai,
+            'outlet_id_terpilih' => $outlet_id_terpilih,
+        ]);
+    }
+
+    public function showLaporanStok(Request $request)
+    {
+        $outlet_id_terpilih = $request->input('id_outlet');
+        $exportType = $request->input('export');
+
+        $stokQuery = DB::table('stok_outlet as so')
+            ->join('outlets as o', 'so.id_outlet', '=', 'o.id')
+            ->join('bahan_baku as bb', 'so.id_bahan_baku', '=', 'bb.id')
+            ->select('o.nama_outlet', 'bb.nama_bahan', 'bb.satuan', 'so.jumlah_stok')
+            ->where('so.jumlah_stok', '>', 0)
+            ->when($outlet_id_terpilih, function ($query, $outletId) {
+                return $query->where('so.id_outlet', $outletId);
+            })
+            ->orderBy('o.nama_outlet')
+            ->orderBy('bb.nama_bahan');
+
+        $stokData = $stokQuery->get();
+        $stokGrouped = $stokData->groupBy('nama_outlet');
+
+        if ($exportType) {
+            $namaFile = 'laporan-stok-outlet';
+            $namaOutlet = $outlet_id_terpilih ? DB::table('outlets')->where('id', $outlet_id_terpilih)->value('nama_outlet') : 'Semua Outlet';
+            $data_export = [
+                'stokGrouped' => $stokGrouped,
+                'namaOutlet' => $namaOutlet,
+            ];
+
+            if ($exportType == 'excel') {
+                return Excel::download(new StokOutletExport($data_export), $namaFile . '.xlsx');
+            }
+            if ($exportType == 'pdf') {
+                $pdf = PDF::loadView('laporan.export.stok-outlet-export', $data_export);
+                return $pdf->download($namaFile . '.pdf');
+            }
+        }
+
+        $outlets = DB::table('outlets')->orderBy('nama_outlet')->get();
+
+        return view('laporan.stok-outlet', [
+            'stokGrouped' => $stokGrouped,
+            'outlets' => $outlets,
+            'outlet_id_terpilih' => $outlet_id_terpilih,
         ]);
     }
 }

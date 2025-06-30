@@ -18,19 +18,30 @@
             <table id="table1" class="table table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th width="20px">NO</th>
-                        <th>Tanggal Pembelian</th>
+                        <th>NO</th>
+                        <th>Tgl Pembelian</th>
+                        <th>Jatuh Tempo</th>
                         <th>No. Invoice</th>
                         <th>Supplier</th>
-                        <th class="text-right">Total Tagihan</th>
-                        <th class="text-center" width="120px">Aksi</th>
+                        <th class="text-right">Sisa Tagihan</th>
+                        <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($hutangs as $item)
-                        <tr>
+                        @php
+                            $jatuhTempo = \Carbon\Carbon::parse($item->tanggal_jatuh_tempo);
+                            $isOverdue = $jatuhTempo->isPast() && $item->status != 'Lunas';
+                        @endphp
+                        <tr class="{{ $isOverdue ? 'table-danger' : '' }}">
                             <td class="text-center">{{ $loop->iteration }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->tanggal_pembelian)->format('d F Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->tanggal_pembelian)->format('d M Y') }}</td>
+                            <td>
+                                {{ $jatuhTempo->format('d M Y') }}
+                                @if ($isOverdue)
+                                    <span class="badge badge-danger">{{ $jatuhTempo->diffForHumans() }}</span>
+                                @endif
+                            </td>
                             <td>{{ $item->nomor_invoice }}</td>
                             <td>{{ $item->nama_supplier }}</td>
                             <td class="text-right">Rp {{ number_format($item->total_biaya, 0, ',', '.') }}</td>
@@ -42,7 +53,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center">Tidak ada hutang yang perlu dibayar.</td>
+                            <td colspan="7" class="text-center">Tidak ada hutang yang perlu dibayar.</td>
                         </tr>
                     @endforelse
                 </tbody>

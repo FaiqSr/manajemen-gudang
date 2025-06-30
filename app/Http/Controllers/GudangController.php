@@ -88,6 +88,15 @@ class GudangController extends Controller
                         ->where('id_bahan_baku', $item['id'])
                         ->decrement('jumlah_stok', $item['jumlah']);
 
+                    $stokGudangId = DB::table('stok_gudang')->where('id_bahan_baku', $item['id'])->value('id');
+
+                    DB::table('stok_gudang_detail')->insert([
+                        'id_stok_gudang' => $stokGudangId,
+                        'status' => 'OUT',
+                        'jumlah' => $item['jumlah'],
+                        'tanggal' => $request->tanggal_distribusi
+                    ]);
+
                     $stokOutlet = DB::table('stok_outlet')
                         ->where('id_outlet', $request->id_outlet_tujuan)
                         ->where('id_bahan_baku', $item['id'])

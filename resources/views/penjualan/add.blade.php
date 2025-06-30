@@ -1,11 +1,11 @@
 @extends('layout.main')
 
-@section('title', 'User')
+@section('title', 'Penjualan')
 
 @section('breadcrums')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1>User</h1>
+            <h1>Penjualan</h1>
         </div>
         <div class="col-sm-6">
         </div>
@@ -61,8 +61,30 @@
                                     <small id="maxInfo" class="form-text text-muted"></small>
                                 </div>
                                 <div class="form-group">
+                                    <label>Metode Pembayaran</label>
+                                    <select name="metode_pembayaran" id="metode_pembayaran" class="form-control" required>
+                                        <option value="Tunai" {{ old('metode_pembayaran') == 'Tunai' ? 'selected' : '' }}>
+                                            Tunai</option>
+                                        <option value="Digital/Bank"
+                                            {{ old('metode_pembayaran') == 'Digital/Bank' ? 'selected' : '' }}>Digital/Bank
+                                        </option>
+                                        <option value="Kredit" {{ old('metode_pembayaran') == 'Kredit' ? 'selected' : '' }}>
+                                            Kredit/Piutang</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="nama_pelanggan_div" style="display: none;">
+                                    <label>Nama Pelanggan (Wajib jika Kredit)</label>
+                                    <input type="text" name="nama_pelanggan"
+                                        class="form-control @error('nama_pelanggan') is-invalid @enderror"
+                                        value="{{ old('nama_pelanggan') }}">
+                                    @error('nama_pelanggan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="form-group">
                                     <button type="submit" class="btn btn-primary">Simpan</button>
                                 </div>
+
                             </div>
                             <div class="col-md-4"></div>
                         </div>
@@ -95,6 +117,23 @@
                     maxInfo.textContent = "";
                 }
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const metodePembayaran = document.getElementById('metode_pembayaran');
+            const namaPelangganDiv = document.getElementById('nama_pelanggan_div');
+
+            function togglePelanggan() {
+                if (metodePembayaran.value === 'Kredit') {
+                    namaPelangganDiv.style.display = 'block';
+                } else {
+                    namaPelangganDiv.style.display = 'none';
+                }
+            }
+
+            metodePembayaran.addEventListener('change', togglePelanggan);
+            togglePelanggan();
         });
     </script>
 @endsection

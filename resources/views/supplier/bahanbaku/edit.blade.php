@@ -15,13 +15,13 @@
 @section('content')
     <div class="row">
         <div class="col-md-12">
-            <form action="{{ url('supplier/bahan/edit') }}" method="post">
+            <form action="{{ url('bahan/edit') }}" method="post">
                 <div class="card">
                     <div class="card-header">
                         <div class="row">
                             <div class="col">
                                 <div class="ml-auto">
-                                    <a href="{{ url('supplier/bahan/') }}" class="btn btn-default">
+                                    <a href="{{ url('bahan/') }}" class="btn btn-default">
                                         <i class="fas fa fa-reply"></i> Kembali </a>
                                 </div>
                             </div>

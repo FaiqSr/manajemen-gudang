@@ -15,13 +15,13 @@
 @section('content')
     <div class="row">
         <div class="col-md-12">
-            <form action="{{ url('supplier/bahan/add') }}" method="post">
+            <form action="{{ url('bahan/add') }}" method="post">
                 <div class="card">
                     <div class="card-header">
                         <div class="row">
                             <div class="col">
                                 <div class="ml-auto">
-                                    <a href="{{ url('supplier/index') }}" class="btn btn-default">
+                                    <a href="{{ url('bahan') }}" class="btn btn-default">
                                         <i class="fas fa fa-reply"></i> Kembali </a>
                                 </div>
                             </div>
@@ -40,7 +40,7 @@
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label">Satuan</label>
                             <div class="col-sm-4">
-                                <select name="satuan" id="satuan" class="form-control">
+                                <select name="satuan" id="satuan" class="form-control" required>
                                     <option value="">--Pilih Satuan--</option>
                                     @foreach ($satuan as $satuan)
                                         <option value="{{ $satuan->nama_satuan }}">{{ $satuan->nama_satuan }}</option>

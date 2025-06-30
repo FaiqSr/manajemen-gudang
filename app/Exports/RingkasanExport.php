@@ -18,7 +18,7 @@ class RingkasanExport implements FromView, WithTitle, ShouldAutoSize
 
     public function view(): View
     {
-        return view('laporan.ringkasan-export', [
+        return view('laporan.export.ringkasan-export', [
             'totalPendapatan' => $this->data['totalPendapatan'],
             'totalBiayaOperasional' => $this->data['totalBiayaOperasional'],
             'rincianBiaya' => $this->data['rincianBiaya'],

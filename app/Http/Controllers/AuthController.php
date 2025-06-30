@@ -10,36 +10,46 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+
         $user = DB::table('tbl_user')->where('email', $request->email)->first();
 
-        if (Hash::check(@$request->password, @$user->password)) {
-            $data = DB::table('tbl_user')->where('id', $user->id)->first();
-            session([
-                'berhasil_login' => true,
-                'id_user' => $data->id,
-                'id_role' => $data->id_role,
-                'ID1' => null,
-                'ID2' => null,
-                'nilai' => null,
-            ]);
 
-            //return redirect('dashboard');
-            $now = date('Y-m-d');
-            $cek = date('Y-12-d');
-            if ($now >= $cek) {
-                return redirect('/')->with('gagal', 'Gagal');
-            } else {
-                return redirect('dashboard');
-            }
-        } else {
-            return redirect('/')->with('gagal', 'Gagal');
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return redirect('/')->with('gagal', 'Email atau Password salah.');
         }
+
+        if ($user->is_active != 1) {
+            return redirect('/')->with('gagal', 'Akun Anda tidak aktif.');
+        }
+
+        session([
+            'berhasil_login' => true,
+            'is_login' => true,
+            'id_user' => $user->id,
+            'id_role' => $user->id_role,
+            'nama_lengkap' => $user->nama_lengkap,
+            'email' => $user->email,
+        ]);
+
+        $now = date('Y-m-d');
+        $cek = date('Y-12-d');
+        if ($now >= $cek) {
+            session()->flush();
+            return redirect('/')->with('gagal', 'Aplikasi telah kadaluarsa.');
+        }
+
+        return redirect('dashboard');
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        session()->forget(['id_user', 'id_role', 'ID1', 'ID2', 'nilai']);
-        session()->flush();
-        return redirect('/')->with('logout', 'Sukses');
+        $request->session()->flush();
+        $request->session()->regenerateToken();
+        return redirect('/')->with('logout', 'Anda telah berhasil logout.');
     }
 }
